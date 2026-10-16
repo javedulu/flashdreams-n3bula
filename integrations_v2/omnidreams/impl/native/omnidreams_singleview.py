@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import importlib.machinery
 import importlib.util
 import json
 import os
@@ -563,6 +564,35 @@ def _scoped_cuda_arch_list(cuda_arch_list: str | None) -> Iterator[None]:
             os.environ[_PYTORCH_CUDA_ARCH_LIST_ENV] = previous
 
 
+def _load_prebuilt_extension(
+    extension_name: str,
+    extension_build_dir: Path,
+) -> ModuleType | None:
+    extension_path = next(
+        (
+            extension_build_dir / f"{extension_name}{suffix}"
+            for suffix in importlib.machinery.EXTENSION_SUFFIXES
+            if (extension_build_dir / f"{extension_name}{suffix}").is_file()
+        ),
+        None,
+    )
+    if extension_path is None:
+        return None
+
+    spec = importlib.util.spec_from_file_location(extension_name, extension_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load prebuilt native extension from {extension_path}")
+
+    extension = importlib.util.module_from_spec(spec)
+    sys.modules[extension_name] = extension
+    try:
+        spec.loader.exec_module(extension)
+    except Exception:
+        sys.modules.pop(extension_name, None)
+        raise
+    return extension
+
+
 def load_extension(
     build_root: Path | str | None = None,
     *,
@@ -592,8 +622,6 @@ def load_extension(
         try:
             _ensure_windows_cuda13_toolkit()
 
-            from torch.utils.cpp_extension import load as load_torch_extension
-
             try:
                 thirdparty_info = _ensure_thirdparty()
             except _native_build().NativeBuildError as exc:
@@ -617,9 +645,18 @@ def load_extension(
                 extension_name,
                 build_root=build_root,
             )
-            extension_build_dir.mkdir(parents=True, exist_ok=True)
             _add_windows_cuda_dll_directories(cudnn_package_dir)
 
+            if (prebuilt_extension := _load_prebuilt_extension(
+                extension_name,
+                extension_build_dir,
+            )) is not None:
+                _extension[extension_key] = prebuilt_extension
+                return prebuilt_extension
+
+            from torch.utils.cpp_extension import load as load_torch_extension
+
+            extension_build_dir.mkdir(parents=True, exist_ok=True)
             with (
                 _scoped_torch_max_jobs(max_jobs),
                 _scoped_cuda_arch_list(cuda_arch_list),

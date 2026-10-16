@@ -43,7 +43,18 @@ package and native-artifact contents can carry additional terms.
 Separately downloaded model weights and examples retain their upstream
 terms, including custom or noncommercial licenses; see THIRD-PARTY-NOTICES.
 
-Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+This repository is a fork of NVIDIA FlashDreams:
+   Upstream: https://github.com/NVIDIA/FlashDreams
+   Fork: https://github.com/javedulu/flashdreams-n3bula
+
+The Apache License 2.0 terms below are retained from upstream. The NVIDIA
+copyright notice applies to upstream NVIDIA-authored materials, not to
+fork-specific additions. This fork is not affiliated with or endorsed by
+NVIDIA or its affiliates. See per-file notices for authorship and licensing
+of fork-specific additions.
+
+Upstream FlashDreams copyright notice: Copyright (c) 2026 NVIDIA CORPORATION
+& AFFILIATES. All rights reserved.
 
 
                                  Apache License

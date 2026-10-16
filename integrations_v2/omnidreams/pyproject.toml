@@ -25,15 +25,9 @@ readme = "README.md"
 # PyNvVideoCodec 2.1 currently publishes wheels through CPython 3.12.
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    # Core inference / serving deps consumed by ``omnidreams.impl.grpc`` and
-    # the model adapters for the reusable Interactive Drive application.
-    "flashdreams[serving]",
-    "flashdreams-interactive-drive-v2",
-    "crazy-robotaxi",
-    "mediapy>=1.1",
+    # Core inference / serving deps consumed by ``omnidreams.impl.grpc``.
+    "flashdreams",
     "ludus-renderer",
-    "imageio>=2.20",
-    "grpcio-tools>=1.50",
     "grpcio>=1.50",
     "nvidia-cudnn-frontend==1.22.1",
     # Must match the cuDNN bundled by the Windows PyTorch cu130 wheel.
@@ -55,17 +49,6 @@ dependencies = [
     "tqdm>=4.67",
     "transformers>=5.17,<6",
     "huggingface_hub>=0.24",
-    # NVENC hardware H.264 encoding for the WebRTC path via
-    # ``flashdreams.serving.webrtc.encoders.PyNvHardwareEncoder``. Not
-    # optional: omnidreams already requires CUDA at runtime, so the
-    # PyNvVideoCodec install adds no extra platform surface. Upstream
-    # currently publishes wheels for CPython 3.10-3.12 only (including
-    # Linux ARM64), so this package's ``requires-python`` excludes 3.13.
-    # Hosts without an NVENC ASIC fall back to aiortc's software encoder
-    # automatically at session initialization (Stage-1 ``GetEncoderCaps``
-    # probe returns unsupported, ``select_encoder`` logs the reason and
-    # constructs ``DefaultRTCEncoder``).
-    "PyNvVideoCodec>=2.1,<3",
 ]
 
 [tool.uv.sources]
@@ -75,6 +58,19 @@ crazy-robotaxi = { workspace = true }
 ludus-renderer = { workspace = true }
 
 [project.optional-dependencies]
+# Interactive Drive and Crazy Robotaxi are independent of the gRPC service.
+applications = [
+    "flashdreams[serving]",
+    "flashdreams-interactive-drive-v2",
+    "crazy-robotaxi",
+    "PyNvVideoCodec>=2.1,<3",
+]
+codegen = [
+    "grpcio-tools>=1.50",
+]
+replay = [
+    "imageio>=2.20",
+]
 # Slangpy runtime, only needed by the ``interactive-drive`` application.
 # gRPC server users do not need this and should not pay the presentation
 # install cost in their containers. Named after the consumer rather than
@@ -132,6 +128,7 @@ packages = [
     "omnidreams.impl.scripts",
     "omnidreams.impl.tools",
     "omnidreams.impl.transformer",
+    "omnidreams.n3bula",
 ]
 
 [tool.setuptools.package-dir]

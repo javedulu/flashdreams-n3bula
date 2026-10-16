@@ -3,10 +3,10 @@
 import grpc
 import warnings
 
-from omnidreams.impl.grpc.protos import common_pb2 as omnidreams_dot_grpc_dot_protos_dot_common__pb2
-from omnidreams.impl.grpc.protos import video_model_pb2 as omnidreams_dot_grpc_dot_protos_dot_video__model__pb2
+from omnidreams.impl.grpc.protos import common_pb2 as omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2
+from omnidreams.impl.grpc.protos import video_model_pb2 as omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2
 
-GRPC_GENERATED_VERSION = '1.80.0'
+GRPC_GENERATED_VERSION = '1.81.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -19,14 +19,14 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + ' but the generated code in omnidreams/grpc/protos/video_model_pb2_grpc.py depends on'
+        + ' but the generated code in omnidreams/impl/grpc/protos/video_model_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class WorldModelServiceStub(object):
+class WorldModelServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -37,27 +37,27 @@ class WorldModelServiceStub(object):
         """
         self.start_session = channel.unary_unary(
                 '/omnidreams.video_model.WorldModelService/start_session',
-                request_serializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.SerializeToString,
-                response_deserializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.FromString,
+                request_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.SerializeToString,
+                response_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.FromString,
                 _registered_method=True)
         self.close_session = channel.unary_unary(
                 '/omnidreams.video_model.WorldModelService/close_session',
-                request_serializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.SerializeToString,
-                response_deserializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
+                request_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.SerializeToString,
+                response_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
                 _registered_method=True)
         self.render_video_chunk = channel.unary_unary(
                 '/omnidreams.video_model.WorldModelService/render_video_chunk',
-                request_serializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.SerializeToString,
-                response_deserializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.FromString,
+                request_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.SerializeToString,
+                response_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.FromString,
                 _registered_method=True)
         self.get_version = channel.unary_unary(
                 '/omnidreams.video_model.WorldModelService/get_version',
-                request_serializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
-                response_deserializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.VersionId.FromString,
+                request_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
+                response_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.VersionId.FromString,
                 _registered_method=True)
 
 
-class WorldModelServiceServicer(object):
+class WorldModelServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def start_session(self, request, context):
@@ -89,23 +89,23 @@ def add_WorldModelServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'start_session': grpc.unary_unary_rpc_method_handler(
                     servicer.start_session,
-                    request_deserializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.FromString,
-                    response_serializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.SerializeToString,
+                    request_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.FromString,
+                    response_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.SerializeToString,
             ),
             'close_session': grpc.unary_unary_rpc_method_handler(
                     servicer.close_session,
-                    request_deserializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.FromString,
-                    response_serializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
+                    request_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.FromString,
+                    response_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
             ),
             'render_video_chunk': grpc.unary_unary_rpc_method_handler(
                     servicer.render_video_chunk,
-                    request_deserializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.FromString,
-                    response_serializer=omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.SerializeToString,
+                    request_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.FromString,
+                    response_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.SerializeToString,
             ),
             'get_version': grpc.unary_unary_rpc_method_handler(
                     servicer.get_version,
-                    request_deserializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
-                    response_serializer=omnidreams_dot_grpc_dot_protos_dot_common__pb2.VersionId.SerializeToString,
+                    request_deserializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
+                    response_serializer=omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.VersionId.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -115,7 +115,7 @@ def add_WorldModelServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class WorldModelService(object):
+class WorldModelService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -133,8 +133,8 @@ class WorldModelService(object):
             request,
             target,
             '/omnidreams.video_model.WorldModelService/start_session',
-            omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.SerializeToString,
-            omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.FromString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionRequest.SerializeToString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionId.FromString,
             options,
             channel_credentials,
             insecure,
@@ -160,8 +160,8 @@ class WorldModelService(object):
             request,
             target,
             '/omnidreams.video_model.WorldModelService/close_session',
-            omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.SerializeToString,
-            omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.SessionCloseRequest.SerializeToString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
@@ -187,8 +187,8 @@ class WorldModelService(object):
             request,
             target,
             '/omnidreams.video_model.WorldModelService/render_video_chunk',
-            omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.SerializeToString,
-            omnidreams_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.FromString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkRequest.SerializeToString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_video__model__pb2.VideoChunkReturn.FromString,
             options,
             channel_credentials,
             insecure,
@@ -214,8 +214,8 @@ class WorldModelService(object):
             request,
             target,
             '/omnidreams.video_model.WorldModelService/get_version',
-            omnidreams_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
-            omnidreams_dot_grpc_dot_protos_dot_common__pb2.VersionId.FromString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.Empty.SerializeToString,
+            omnidreams_dot_impl_dot_grpc_dot_protos_dot_common__pb2.VersionId.FromString,
             options,
             channel_credentials,
             insecure,

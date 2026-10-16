@@ -1,0 +1,168 @@
+# syntax=docker/dockerfile:1.7
+# SPDX-FileCopyrightText: Copyright (c) 2026 Javed Shaik
+# SPDX-License-Identifier: Apache-2.0
+
+ARG FLASHDREAMS_DEVEL_IMAGE=pytorch/pytorch:2.12.1-cuda13.0-cudnn9-devel
+ARG FLASHDREAMS_RUNTIME_IMAGE=pytorch/pytorch:2.12.1-cuda13.0-cudnn9-runtime
+
+FROM ${FLASHDREAMS_DEVEL_IMAGE} AS development
+
+ARG FLASHDREAMS_UID=1000
+ARG FLASHDREAMS_PIPELINE_CONFIG=omnidreams-perf
+ARG FLASHDREAMS_RESOLUTION=640p
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    UV_PROJECT_ENVIRONMENT=/opt/flashdreams/.venv \
+    UV_LINK_MODE=copy \
+    UV_NO_PROGRESS=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASHDREAMS_PIPELINE_CONFIG=${FLASHDREAMS_PIPELINE_CONFIG} \
+    FLASHDREAMS_RESOLUTION=${FLASHDREAMS_RESOLUTION} \
+    OMNIDREAMS_SINGLEVIEW_CUDA_ARCH_LIST=12.0a \
+    OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    LUDUS_RENDERER_CUDA_ARCH_LIST=12.0a \
+    LUDUS_RENDERER_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    HF_HOME=/home/flashdreams/.cache/huggingface
+
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        build-essential cmake ninja-build git curl ca-certificates \
+        ffmpeg libnccl-dev libgomp1 libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+RUN useradd --non-unique --uid "${FLASHDREAMS_UID}" --create-home --shell /bin/bash flashdreams
+
+WORKDIR /opt/flashdreams
+COPY --chown=${FLASHDREAMS_UID}:1000 . /opt/flashdreams
+
+RUN --mount=type=cache,target=/root/.cache/uv,id=omnidreams-uv-py312-torch212,sharing=locked \
+    uv venv --python /usr/bin/python3 --system-site-packages "$UV_PROJECT_ENVIRONMENT" \
+    && uv sync --package flashdreams-omnidreams --inexact --no-dev \
+        --no-install-package torch \
+        --no-install-package torchvision \
+        --no-install-package triton \
+        --no-install-package cuda-toolkit \
+        --no-install-package nvidia-cuda-cupti \
+        --no-install-package nvidia-cuda-nvrtc \
+        --no-install-package nvidia-cuda-runtime \
+        --no-install-package nvidia-cudnn-cu13 \
+        --no-install-package nvidia-cufft \
+        --no-install-package nvidia-cufile \
+        --no-install-package nvidia-curand \
+        --no-install-package nvidia-cusolver \
+        --no-install-package nvidia-cusparse \
+        --no-install-package nvidia-cusparselt-cu13 \
+        --no-install-package nvidia-nccl-cu13 \
+        --no-install-package nvidia-nvjitlink \
+        --no-install-package nvidia-nvtx \
+        --no-install-package nvidia-nvshmem-cu13 \
+    && mkdir -p /opt/flashdreams/artifacts /home/flashdreams/.cache/huggingface \
+    && chown -R "${FLASHDREAMS_UID}:1000" /opt/flashdreams/artifacts /home/flashdreams
+
+USER flashdreams
+WORKDIR /opt/flashdreams/integrations_v2
+RUN --mount=type=cache,target=/tmp/omnidreams-native-build,uid=${FLASHDREAMS_UID},gid=1000,id=omnidreams-sage3-sm120a-torch212-cuda130,sharing=locked \
+    find /tmp/omnidreams-native-build/torch_extensions -type f -name lock -delete 2>/dev/null || true; \
+    mkdir -p /tmp/cuda-driver-stub \
+    && ln -s /usr/local/cuda/lib64/stubs/libcuda.so /tmp/cuda-driver-stub/libcuda.so.1 \
+     && LIBRARY_PATH=/usr/local/cuda/lib64/stubs \
+       LD_LIBRARY_PATH=/tmp/cuda-driver-stub:${LD_LIBRARY_PATH} \
+         OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/tmp/omnidreams-native-build \
+         TORCH_EXTENSIONS_DIR=/tmp/omnidreams-native-build/torch_extensions \
+             OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/tmp/omnidreams-native-build \
+             LUDUS_RENDERER_NATIVE_BUILD_ROOT=/tmp/ludus-renderer-no-prebuilt \
+             LUDUS_RENDERER_CUDA_ARCH_LIST=12.0a \
+             TORCH_EXTENSIONS_DIR=/tmp/omnidreams-native-build/torch_extensions \
+             MAX_JOBS=8 \
+             LIBRARY_PATH=/usr/local/cuda/lib64/stubs \
+             LD_LIBRARY_PATH=/tmp/cuda-driver-stub:${LD_LIBRARY_PATH} \
+             uv run --package flashdreams-omnidreams --no-sync python \
+             /opt/flashdreams/docker/prebuild_n3bula_extensions.py \
+         && rm -f /opt/flashdreams/docker/prebuild_n3bula_extensions.py \
+     && rm -rf /tmp/cuda-driver-stub \
+     && mkdir -p /opt/flashdreams/artifacts/omnidreams/native-build/torch_extensions \
+     && cp -a /tmp/omnidreams-native-build/torch_extensions/. /opt/flashdreams/artifacts/omnidreams/native-build/torch_extensions/
+
+ENV N3BULA_GPU_CONTROL_INPUT=1 \
+    N3BULA_GPU_JPEG_ENCODING=1 \
+    N3BULA_RETURN_CONTROL_IMAGES=0
+
+CMD ["bash"]
+
+FROM development AS release-build
+
+ARG FLASHDREAMS_UID=1000
+ARG FLASHDREAMS_PIPELINE_CONFIG=omnidreams-perf
+ARG FLASHDREAMS_RESOLUTION=640p
+
+USER root
+WORKDIR /opt/flashdreams
+RUN uv sync --package flashdreams-omnidreams --extra codegen --inexact --no-dev \
+        --no-install-package torch \
+        --no-install-package torchvision \
+        --no-install-package triton \
+        --no-install-package cuda-toolkit \
+        --no-install-package nvidia-cuda-cupti \
+        --no-install-package nvidia-cuda-nvrtc \
+        --no-install-package nvidia-cuda-runtime \
+        --no-install-package nvidia-cudnn-cu13 \
+        --no-install-package nvidia-cufft \
+        --no-install-package nvidia-cufile \
+        --no-install-package nvidia-curand \
+        --no-install-package nvidia-cusolver \
+        --no-install-package nvidia-cusparse \
+        --no-install-package nvidia-cusparselt-cu13 \
+        --no-install-package nvidia-nccl-cu13 \
+        --no-install-package nvidia-nvjitlink \
+        --no-install-package nvidia-nvtx \
+        --no-install-package nvidia-nvshmem-cu13 \
+    && UV_NO_SYNC=1 bash integrations_v2/omnidreams/compile_protos.sh \
+    && uv pip uninstall --python "$UV_PROJECT_ENVIRONMENT/bin/python" grpcio-tools \
+    && cd integrations_v2 \
+    && uv run --package flashdreams-omnidreams --no-sync python -c \
+       "from omnidreams.n3bula.service import N3bulaLudusService; print('N3BULA Ludus gRPC service import OK')" \
+    && uv run --package flashdreams-omnidreams --no-sync python -c \
+       "from omnidreams.config import OMNIDREAMS_CONFIGS; from omnidreams.impl.grpc.server import RESOLUTION_MAP; assert '${FLASHDREAMS_PIPELINE_CONFIG}' in OMNIDREAMS_CONFIGS; assert '${FLASHDREAMS_RESOLUTION}' in RESOLUTION_MAP" \
+    && cd /opt/flashdreams \
+    && mkdir -p /home/flashdreams/.cache/huggingface \
+    && chown -R "${FLASHDREAMS_UID}:1000" /opt/flashdreams /home/flashdreams
+USER flashdreams
+
+FROM ${FLASHDREAMS_RUNTIME_IMAGE} AS release
+
+ARG FLASHDREAMS_UID=1000
+ARG FLASHDREAMS_PIPELINE_CONFIG=omnidreams-perf
+ARG FLASHDREAMS_RESOLUTION=640p
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    FLASHDREAMS_PIPELINE_CONFIG=${FLASHDREAMS_PIPELINE_CONFIG} \
+    FLASHDREAMS_RESOLUTION=${FLASHDREAMS_RESOLUTION} \
+    N3BULA_GPU_CONTROL_INPUT=1 \
+    N3BULA_GPU_JPEG_ENCODING=1 \
+    N3BULA_RETURN_CONTROL_IMAGES=0 \
+    OMNIDREAMS_SINGLEVIEW_CUDA_ARCH_LIST=12.0a \
+    OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    LUDUS_RENDERER_CUDA_ARCH_LIST=12.0a \
+    LUDUS_RENDERER_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    HF_HOME=/home/flashdreams/.cache/huggingface
+
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        ca-certificates ffmpeg git libnccl2 libgomp1 libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --non-unique --uid "${FLASHDREAMS_UID}" --create-home --shell /bin/bash flashdreams \
+    && python3 -m pip uninstall --break-system-packages -y cmake ninja uv
+
+COPY --from=release-build --chown=${FLASHDREAMS_UID}:1000 /opt/flashdreams /opt/flashdreams
+COPY --chmod=0755 --from=release-build /opt/flashdreams/docker/n3bula-entrypoint.sh /usr/local/bin/n3bula-entrypoint
+
+ENV N3BULA_GPU_CONTROL_INPUT=1 \
+    N3BULA_GPU_JPEG_ENCODING=1 \
+    N3BULA_RETURN_CONTROL_IMAGES=0
+
+USER flashdreams
+WORKDIR /opt/flashdreams/integrations_v2
+EXPOSE 50051
+ENTRYPOINT ["/usr/local/bin/n3bula-entrypoint"]

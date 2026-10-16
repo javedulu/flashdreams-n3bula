@@ -75,6 +75,13 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
 
+# --- N3BULA service and generated bindings authored for this fork. ---
+[[annotations]]
+path = "integrations_v2/omnidreams/n3bula/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2026 Javed Shaik"
+SPDX-License-Identifier = "Apache-2.0"
+
 # --- Binary assets (images, video clips, model snapshots, lock files) carry
 #     no inline header. They are NVIDIA-authored unless otherwise noted in
 #     NOTICE. ---

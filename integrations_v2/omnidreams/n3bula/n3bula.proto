@@ -1,0 +1,205 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 Javed Shaik
+// SPDX-License-Identifier: Apache-2.0
+syntax = "proto3";
+
+package omnidreams.n3bula;
+
+import "omnidreams/impl/grpc/protos/camera.proto";
+import "omnidreams/impl/grpc/protos/video_model.proto";
+
+// World-space values are doubles so georeferenced coordinates and camera
+// calibration survive the SUMO-to-Ludus boundary without float truncation.
+message Vec3d {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+message Euler3d {
+    // Rz * Ry * Rx; positive pitch is nose-down in the SUMO scene convention.
+    double yaw_rad = 1;
+    double pitch_rad = 2;
+    double roll_rad = 3;
+}
+
+// Numeric values match cosmos::SemanticId and are stable on the wire.
+enum SemanticId {
+    SEMANTIC_ID_VOID = 0;
+    SEMANTIC_ID_LANE_MARKING = 1;
+    SEMANTIC_ID_ROAD_BOUNDARY = 2;
+    SEMANTIC_ID_CROSSWALK = 3;
+    SEMANTIC_ID_STOP_LINE = 4;
+    SEMANTIC_ID_TRAFFIC_SIGN = 5;
+    SEMANTIC_ID_TRAFFIC_LIGHT = 6;
+    SEMANTIC_ID_POLE = 7;
+    SEMANTIC_ID_ACTOR = 8;
+    SEMANTIC_ID_EGO = 9;
+    SEMANTIC_ID_ROAD_SURFACE = 10;
+    SEMANTIC_ID_SHOULDER = 11;
+    SEMANTIC_ID_SIDEWALK = 12;
+    SEMANTIC_ID_CURB = 13;
+    SEMANTIC_ID_PARKING = 14;
+    SEMANTIC_ID_BIKE_LANE = 15;
+    SEMANTIC_ID_TERRAIN = 16;
+    SEMANTIC_ID_SPEED_SIGN = 17;
+}
+
+enum MarkColorId {
+    MARK_COLOR_ID_WHITE = 0;
+    MARK_COLOR_ID_YELLOW = 1;
+    MARK_COLOR_ID_ORANGE = 2;
+    MARK_COLOR_ID_BLUE = 3;
+    MARK_COLOR_ID_GREEN = 4;
+    MARK_COLOR_ID_RED = 5;
+    MARK_COLOR_ID_VIOLET = 6;
+    MARK_COLOR_ID_BLACK = 7;
+    MARK_COLOR_ID_UNRESOLVED = 8;
+}
+
+enum MarkTypeId {
+    MARK_TYPE_ID_UNDECIDED = 0;
+    MARK_TYPE_ID_SOLID = 1;
+    MARK_TYPE_ID_BROKEN = 2;
+    MARK_TYPE_ID_SOLID_SOLID = 3;
+    MARK_TYPE_ID_SOLID_BROKEN = 4;
+    MARK_TYPE_ID_BROKEN_SOLID = 5;
+    MARK_TYPE_ID_BROKEN_BROKEN = 6;
+    MARK_TYPE_ID_BOTTS_DOTS = 7;
+}
+
+enum ActorCategory {
+    ACTOR_CATEGORY_CAR = 0;
+    ACTOR_CATEGORY_TRUCK = 1;
+    ACTOR_CATEGORY_PEDESTRIAN = 2;
+    ACTOR_CATEGORY_CYCLIST = 3;
+    ACTOR_CATEGORY_OTHER = 4;
+    ACTOR_CATEGORY_EGO = 5;
+}
+
+enum CameraRole {
+    CAMERA_ROLE_GROUND_TRUTH = 0;
+    CAMERA_ROLE_CONDITIONING = 1;
+}
+
+enum LineWidthMode {
+    LINE_WIDTH_MODE_WORLD_METRES = 0;
+    LINE_WIDTH_MODE_SCREEN_PIXELS = 1;
+}
+
+message Camera {
+    string mount_id = 1;
+    omnidreams.camera.CameraSpec spec = 2;
+    Vec3d position_bs_m = 3; // Camera origin in the body frame, metres.
+    Euler3d rotation_bs = 4;
+    CameraRole role = 5;
+    LineWidthMode line_width_mode = 6;
+    double near_m = 7;
+    double far_m = 8;
+    double rate_hz = 9;
+    repeated double distortion = 10;
+    string calibration_source = 11;
+    uint64 calibration_hash = 12;
+}
+
+message Strip {
+    repeated Vec3d centre_world_m = 1;
+    double width = 2; // Metres or pixels according to Camera.line_width_mode.
+    SemanticId semantic = 3;
+    MarkColorId colour = 4;
+    MarkTypeId pattern = 5;
+    uint32 instance_id = 6;
+}
+
+message SurfaceBand {
+    repeated Vec3d left_world_m = 1;
+    repeated Vec3d right_world_m = 2;
+    SemanticId semantic = 3;
+    uint32 instance_id = 4;
+}
+
+message Box {
+    Vec3d centre_world_m = 1;
+    Euler3d rotation_world = 2;
+    double length_m = 3;
+    double width_m = 4;
+    double height_m = 5;
+    SemanticId semantic = 6;
+    ActorCategory category = 7;
+    uint32 instance_id = 8;
+    bool gradient_along_local_x = 9;
+    bool wireframe_overlay = 10;
+}
+
+message MeshInstance {
+    string asset_path = 1;
+    Vec3d origin_world_m = 2;
+    double yaw_rad = 3;
+    SemanticId semantic = 4;
+    uint32 instance_id = 5;
+}
+
+message GenerationConfig {
+    string prompt = 1;
+    omnidreams.video_model.Image seed_image = 2;
+    fixed64 random_seed = 3;
+}
+
+message SceneDefinition {
+    string run_id = 1;
+    uint64 configuration_revision = 2;
+    repeated Camera cameras = 3;
+    repeated string camera_errors = 4;
+    repeated Strip static_strips = 5;
+    repeated SurfaceBand static_surface_bands = 6;
+    Vec3d origin_world_m = 7;
+    GenerationConfig generation_config = 8;
+}
+
+message SceneFrame {
+    uint64 source_frame_id = 1;
+    uint64 timestamp_us = 2;
+    double simulation_time_s = 3;
+    bool stale = 4;
+    string ego_actor_id = 5;
+    Vec3d ego_position_world_m = 6;
+    Euler3d ego_rotation_world = 7;
+    string camera_mount_id = 8;
+    repeated SurfaceBand surface_bands = 9;
+    repeated Strip strips = 10;
+    repeated Box boxes = 11;
+    repeated MeshInstance meshes = 12;
+    uint64 palette_hash = 13;
+    string palette_version = 14;
+}
+
+message SceneBatch {
+    uint32 schema_version = 1; // Current schema is 1.
+    SceneDefinition definition = 2;
+    repeated SceneFrame frames = 3;
+}
+
+message SceneStreamRequest {
+    uint32 schema_version = 1;
+    oneof event {
+        SceneDefinition definition = 2;
+        SceneFrame frame = 3;
+    }
+}
+
+message RenderedControlFrame {
+    string camera_mount_id = 1;
+    uint64 source_frame_id = 2;
+    uint64 timestamp_us = 3;
+    omnidreams.video_model.Image image = 4;
+    string ego_actor_id = 5;
+    omnidreams.video_model.Image generated_image = 6;
+}
+
+message RenderedControls {
+    repeated RenderedControlFrame frames = 1;
+}
+
+service N3bulaLudusService {
+    rpc render_controls(SceneBatch) returns (RenderedControls);
+    rpc stream_scenes(stream SceneStreamRequest) returns (stream RenderedControlFrame);
+}

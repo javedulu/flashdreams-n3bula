@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""gRPC server for bbox-conditioned video generation.
+"""gRPC server for OmniDreams generation and streamed N3BULA scene rendering.
 
-This server implements the WorldModelService defined in video_model.proto.
-It maintains session state for each client and handles:
-- Session initialization with static HD map and initial frame
-- Video chunk generation with dynamic objects and camera trajectories
+WorldModelService supports the versioned session API. N3bulaLudusService accepts
+streamed Cosmos scene geometry, renders control frames with Ludus, and feeds
+them directly to the loaded OmniDreams pipeline.
 """
 
 from __future__ import annotations
@@ -99,6 +98,7 @@ VERBOSE = False
 
 RESOLUTION_MAP: dict[str, tuple[int, int]] = {
     "480p": (832, 480),
+    "640p": (1168, 640),
     "720p": (1280, 720),
     "704p": (1280, 704),
 }
@@ -1323,7 +1323,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--resolution",
         type=str,
-        choices=["480p", "720p", "704p"],
+        choices=["480p", "640p", "720p", "704p"],
         default="704p",
         help="Resolution of the video (default: 704p).",
     )
@@ -1419,6 +1419,9 @@ def main() -> None:
     server: grpc.Server | None = None
     service: WorldModelService | None = None
     if world_rank == 0:  # Only rank 0 runs the gRPC server
+        from omnidreams.n3bula import n3bula_pb2_grpc
+        from omnidreams.n3bula.service import N3bulaLudusService
+
         logger.info("=" * 80)
         logger.info("Starting gRPC World Model Service")
         logger.info(f"Host: {args.host}")
@@ -1444,6 +1447,9 @@ def main() -> None:
 
         # Add service to server
         video_model_pb2_grpc.add_WorldModelServiceServicer_to_server(service, server)
+        n3bula_pb2_grpc.add_N3bulaLudusServiceServicer_to_server(
+            N3bulaLudusService(engine), server
+        )
 
         # Bind to address
         server_address = f"{args.host}:{args.port}"

@@ -1,0 +1,11 @@
+.git
+**/.git
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/build
+**/artifacts
+docker/Dockerfile.n3bula
+docker/Dockerfile.n3bula.dockerignore
+docker/build_n3bula_with_docker.sh

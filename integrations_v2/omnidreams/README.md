@@ -30,11 +30,24 @@ Its public model variants are `OmnidreamsPipelineConfig` literals in
 uv sync --package flashdreams-omnidreams --inexact
 ```
 
+The default install contains the inference and gRPC service dependencies, not
+the Interactive Drive or Crazy Robotaxi applications. Add
+`--extra applications` to install those application packages, and add
+`--extra interactive-drive` when launching the Interactive Drive UI.
+Session replay tools require `--extra replay`; regenerate protobuf bindings
+with `--extra codegen`.
+
 Checkpoints and example scenes download from Hugging Face on first use. Export
 `HF_TOKEN` when the selected repository requires authentication.
 
 Native third-party sources download on first use into
-`artifacts/omnidreams/thirdparty`. Set
+`artifacts/omnidreams/thirdparty`. The N3BULA development image synchronizes
+these sources and prebuilds the Sage3 native extension; its release image
+applies the server patch and copies the compiled extension into a CUDA runtime
+base. The artifact is stored in both images at
+`/opt/flashdreams/artifacts/omnidreams/native-build`, so release rebuilds for
+server-only changes reuse the development build. Outside those images, first
+use may still perform the build. Set
 `FLASHDREAMS_OMNIDREAMS_TRY_THIRDPARTY_RESYNC=1` to attempt a clean redownload
 on each load. Do not use resync while another OmniDreams process is using the
 sources. The default value is `0` (only downloads missing sources).
@@ -47,7 +60,7 @@ sources. The default value is `0` (only downloads missing sources).
 Launch Interactive Drive in a browser with:
 
 ```bash
-uv sync --package flashdreams-omnidreams --extra interactive-drive --inexact
+uv sync --package flashdreams-omnidreams --extra applications --extra interactive-drive --inexact
 uv run --no-sync flashdreams-run-v2 interactive-drive-omnidreams \
   --mode webrtc --host 0.0.0.0 --port 8089
 ```

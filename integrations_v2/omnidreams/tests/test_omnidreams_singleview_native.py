@@ -298,6 +298,46 @@ def test_load_extension_uses_build_root_for_torch_cache(
 
 
 @pytest.mark.ci_cpu
+def test_load_extension_imports_prebuilt_module_without_jit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import importlib.machinery
+    import torch.utils.cpp_extension as cpp_extension
+
+    extension_name = "omnidreams_singleview_native_prebuilt_test"
+    build_root = tmp_path / "native-build"
+    extension_build_dir = build_root / "torch_extensions" / extension_name
+    extension_build_dir.mkdir(parents=True)
+    (extension_build_dir / f"{extension_name}.so").touch()
+    extension = _fake_extension_module(prebuilt=True)
+    loader = SimpleNamespace(exec_module=lambda module: None)
+    spec = importlib.machinery.ModuleSpec(extension_name, loader)
+
+    monkeypatch.setattr(native, "_extension", {})
+    monkeypatch.setattr(native, "_extension_load_error", None)
+    monkeypatch.setattr(native, "_ensure_thirdparty", lambda: _fake_thirdparty_info(tmp_path))
+    monkeypatch.setattr(native, "_effective_cuda_arch_list", lambda: "12.0a")
+    monkeypatch.setattr(native, "_extension_name", lambda *args, **kwargs: extension_name)
+    monkeypatch.setattr(native, "_python_package_dir", lambda package: None)
+    monkeypatch.setattr(native, "_add_windows_cuda_dll_directories", lambda package: None)
+    monkeypatch.setattr(native.importlib.util, "spec_from_file_location", lambda *args: spec)
+    monkeypatch.setattr(native.importlib.util, "module_from_spec", lambda unused_spec: extension)
+    monkeypatch.setattr(
+        cpp_extension,
+        "load",
+        lambda **kwargs: pytest.fail("JIT build must not run when a prebuilt module exists"),
+    )
+    monkeypatch.setitem(native.sys.modules, extension_name, extension)
+
+    loaded = native.load_extension(build_root=build_root)
+
+    assert loaded is extension
+    assert loaded.prebuilt is True
+    assert native.extension_load_error() is None
+
+
+@pytest.mark.ci_cpu
 @pytest.mark.parametrize(
     ("capability", "device_name", "expected"),
     [

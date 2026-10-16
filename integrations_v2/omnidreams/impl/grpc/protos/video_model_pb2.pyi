@@ -91,7 +91,7 @@ class DebugOptions(_message.Message):
     SKIP_VIDEO_GENERATION_FIELD_NUMBER: _ClassVar[int]
     return_hdmap_frames: bool
     skip_video_generation: bool
-    def __init__(self, return_hdmap_frames: bool = ..., skip_video_generation: bool = ...) -> None: ...
+    def __init__(self, return_hdmap_frames: _Optional[bool] = ..., skip_video_generation: _Optional[bool] = ...) -> None: ...
 
 class SessionRequest(_message.Message):
     __slots__ = ("static_world_map", "text_prompt", "debug_options", "camera_specs", "initial_frames", "rig_to_camera", "random_seed")

@@ -16,8 +16,11 @@
 """JIT compilation of the C++/CUDA plugin for Ludus renderer."""
 
 import glob
+import importlib.machinery
+import importlib.util
 import os
 import subprocess
+import sys
 import time
 
 import torch
@@ -28,6 +31,39 @@ from ludus_renderer._logging import logger
 _cached_plugin = None
 _dll_directory_handles = []
 _dll_directory_paths: set[str] = set()
+_PREBUILT_ROOT_ENV = "LUDUS_RENDERER_NATIVE_BUILD_ROOT"
+_CUDA_ARCH_LIST_ENV = "LUDUS_RENDERER_CUDA_ARCH_LIST"
+
+
+def _load_prebuilt_plugin(plugin_name: str):
+    build_root = os.environ.get(_PREBUILT_ROOT_ENV)
+    if not build_root:
+        return None
+
+    extension_dir = os.path.join(build_root, "torch_extensions", plugin_name)
+    extension_path = next(
+        (
+            os.path.join(extension_dir, f"{plugin_name}{suffix}")
+            for suffix in importlib.machinery.EXTENSION_SUFFIXES
+            if os.path.isfile(os.path.join(extension_dir, f"{plugin_name}{suffix}"))
+        ),
+        None,
+    )
+    if extension_path is None:
+        return None
+
+    spec = importlib.util.spec_from_file_location(plugin_name, extension_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load prebuilt Ludus renderer plugin from {extension_path}")
+
+    plugin = importlib.util.module_from_spec(spec)
+    sys.modules[plugin_name] = plugin
+    try:
+        spec.loader.exec_module(plugin)
+    except Exception:
+        sys.modules.pop(plugin_name, None)
+        raise
+    return plugin
 
 
 def _add_windows_dll_directory(path: str) -> None:
@@ -68,6 +104,12 @@ def _get_plugin():
     """
     global _cached_plugin
     if _cached_plugin is not None:
+        return _cached_plugin
+
+    plugin_name = "ludus_renderer_plugin"
+    if (prebuilt_plugin := _load_prebuilt_plugin(plugin_name)) is not None:
+        _cached_plugin = prebuilt_plugin
+        logger.info("Loaded prebuilt Ludus renderer extension from baked artifacts.")
         return _cached_plugin
 
     # Make sure we can find the necessary compiler and library binaries.
@@ -168,11 +210,10 @@ def _get_plugin():
         "../_cpp/bindings/torch_rasterize_cuda.cpp",
     ]
 
-    # Reset CUDA arch list to let PyTorch detect the installed GPU
-    os.environ["TORCH_CUDA_ARCH_LIST"] = ""
+    # Use the baked target when set; otherwise let PyTorch detect the installed GPU.
+    os.environ["TORCH_CUDA_ARCH_LIST"] = os.environ.get(_CUDA_ARCH_LIST_ENV, "")
 
     # Check for stale lock files
-    plugin_name = "ludus_renderer_plugin"
     build_directory = None
     try:
         build_directory = torch.utils.cpp_extension._get_build_directory(
