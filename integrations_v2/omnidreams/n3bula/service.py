@@ -14,13 +14,10 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from io import BytesIO
 
 import grpc
+import ludus_renderer
 import numpy as np
 import torch
-from torchvision.io import encode_jpeg
-from PIL import Image
-from scipy.spatial.transform import Rotation
-
-import ludus_renderer
+from loguru import logger
 from ludus_renderer import (
     PRIM_INTERSECTION,
     PRIM_LANE_BOUNDARY,
@@ -28,6 +25,7 @@ from ludus_renderer import (
     TimestampedPolygonPool,
 )
 from ludus_renderer._ops.primitives import (
+    CAMERA_TYPE_REGULAR,
     CUBE_FLAG_WIREFRAME,
     PRIM_CROSSWALK,
     PRIM_DOT_WHITE,
@@ -45,16 +43,15 @@ from ludus_renderer._ops.primitives import (
     PRIM_TRAFFIC_SIGN,
     PRIM_TYPE_COUNT,
     PRIM_WAIT_LINE,
-    CAMERA_TYPE_REGULAR,
     CubePool,
     TimestampedPolylinePool,
     TimestampedScene,
 )
 from ludus_renderer.torch import LudusCudaTimestampedContext
-from omnidreams.impl.grpc.protos import video_model_pb2
 from omnidreams.n3bula import n3bula_pb2, n3bula_pb2_grpc
-from loguru import logger
-
+from PIL import Image
+from scipy.spatial.transform import Rotation
+from torchvision.io import encode_jpeg
 
 DEFAULT_PROMPT = (
     "A forward-facing dashcam video of a car driving on a road, realistic "
@@ -586,7 +583,7 @@ class _RenderedControl:
         )
         if png is not None:
             response.image.CopyFrom(
-                video_model_pb2.Image(data=png, format=video_model_pb2.PNG)
+                n3bula_pb2.Image(data=png, format=n3bula_pb2.PNG)
             )
         return response
 
@@ -810,7 +807,7 @@ class _OmniDreamsGenerationStream:
 
         if generation_config.HasField("seed_image"):
             seed = generation_config.seed_image
-            if seed.format not in (video_model_pb2.PNG, video_model_pb2.JPEG):
+            if seed.format not in (n3bula_pb2.PNG, n3bula_pb2.JPEG):
                 raise ValueError("N3BULA seed image must be PNG or JPEG")
             if not seed.data:
                 raise ValueError("N3BULA seed image is empty")
@@ -993,8 +990,8 @@ class _OmniDreamsGenerationStream:
                 encoded_data = encoded.getvalue()
             rendered = control.response(png)
             rendered.generated_image.CopyFrom(
-                video_model_pb2.Image(
-                    data=encoded_data, format=video_model_pb2.JPEG
+                n3bula_pb2.Image(
+                    data=encoded_data, format=n3bula_pb2.JPEG
                 )
             )
             responses.append(rendered)

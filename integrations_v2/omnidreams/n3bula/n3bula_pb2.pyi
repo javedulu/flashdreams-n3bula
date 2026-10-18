@@ -1,5 +1,3 @@
-from omnidreams.impl.grpc.protos import camera_pb2 as _camera_pb2
-from omnidreams.impl.grpc.protos import video_model_pb2 as _video_model_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
@@ -8,6 +6,25 @@ from collections.abc import Iterable as _Iterable, Mapping as _Mapping
 from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+
+class ShutterType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    UNKNOWN: _ClassVar[ShutterType]
+    ROLLING_TOP_TO_BOTTOM: _ClassVar[ShutterType]
+    ROLLING_LEFT_TO_RIGHT: _ClassVar[ShutterType]
+    ROLLING_BOTTOM_TO_TOP: _ClassVar[ShutterType]
+    ROLLING_RIGHT_TO_LEFT: _ClassVar[ShutterType]
+    GLOBAL: _ClassVar[ShutterType]
+
+class ImageFormat(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    UNDEFINED: _ClassVar[ImageFormat]
+    PNG: _ClassVar[ImageFormat]
+    JPEG: _ClassVar[ImageFormat]
+    JPEG2000: _ClassVar[ImageFormat]
+    RGB_UINT8_PLANAR: _ClassVar[ImageFormat]
+    AVC: _ClassVar[ImageFormat]
+    AV1: _ClassVar[ImageFormat]
 
 class SemanticId(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -71,6 +88,19 @@ class LineWidthMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     LINE_WIDTH_MODE_WORLD_METRES: _ClassVar[LineWidthMode]
     LINE_WIDTH_MODE_SCREEN_PIXELS: _ClassVar[LineWidthMode]
+UNKNOWN: ShutterType
+ROLLING_TOP_TO_BOTTOM: ShutterType
+ROLLING_LEFT_TO_RIGHT: ShutterType
+ROLLING_BOTTOM_TO_TOP: ShutterType
+ROLLING_RIGHT_TO_LEFT: ShutterType
+GLOBAL: ShutterType
+UNDEFINED: ImageFormat
+PNG: ImageFormat
+JPEG: ImageFormat
+JPEG2000: ImageFormat
+RGB_UINT8_PLANAR: ImageFormat
+AVC: ImageFormat
+AV1: ImageFormat
 SEMANTIC_ID_VOID: SemanticId
 SEMANTIC_ID_LANE_MARKING: SemanticId
 SEMANTIC_ID_ROAD_BOUNDARY: SemanticId
@@ -117,6 +147,124 @@ CAMERA_ROLE_CONDITIONING: CameraRole
 LINE_WIDTH_MODE_WORLD_METRES: LineWidthMode
 LINE_WIDTH_MODE_SCREEN_PIXELS: LineWidthMode
 
+class LinearCde(_message.Message):
+    __slots__ = ("linear_c", "linear_d", "linear_e")
+    LINEAR_C_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_D_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_E_FIELD_NUMBER: _ClassVar[int]
+    linear_c: float
+    linear_d: float
+    linear_e: float
+    def __init__(self, linear_c: _Optional[float] = ..., linear_d: _Optional[float] = ..., linear_e: _Optional[float] = ...) -> None: ...
+
+class FthetaCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "reference_poly", "pixeldist_to_angle_poly", "angle_to_pixeldist_poly", "max_angle", "linear_cde")
+    class PolynomialType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        UNKNOWN: _ClassVar[FthetaCameraParam.PolynomialType]
+        PIXELDIST_TO_ANGLE: _ClassVar[FthetaCameraParam.PolynomialType]
+        ANGLE_TO_PIXELDIST: _ClassVar[FthetaCameraParam.PolynomialType]
+    UNKNOWN: FthetaCameraParam.PolynomialType
+    PIXELDIST_TO_ANGLE: FthetaCameraParam.PolynomialType
+    ANGLE_TO_PIXELDIST: FthetaCameraParam.PolynomialType
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_POLY_FIELD_NUMBER: _ClassVar[int]
+    PIXELDIST_TO_ANGLE_POLY_FIELD_NUMBER: _ClassVar[int]
+    ANGLE_TO_PIXELDIST_POLY_FIELD_NUMBER: _ClassVar[int]
+    MAX_ANGLE_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_CDE_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    reference_poly: FthetaCameraParam.PolynomialType
+    pixeldist_to_angle_poly: _containers.RepeatedScalarFieldContainer[float]
+    angle_to_pixeldist_poly: _containers.RepeatedScalarFieldContainer[float]
+    max_angle: float
+    linear_cde: LinearCde
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., reference_poly: _Optional[_Union[FthetaCameraParam.PolynomialType, str]] = ..., pixeldist_to_angle_poly: _Optional[_Iterable[float]] = ..., angle_to_pixeldist_poly: _Optional[_Iterable[float]] = ..., max_angle: _Optional[float] = ..., linear_cde: _Optional[_Union[LinearCde, _Mapping]] = ...) -> None: ...
+
+class OpenCVPinholeCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "focal_length_x", "focal_length_y", "radial_coeffs", "tangential_coeffs", "thin_prism_coeffs")
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_X_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_Y_FIELD_NUMBER: _ClassVar[int]
+    RADIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    TANGENTIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    THIN_PRISM_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    focal_length_x: float
+    focal_length_y: float
+    radial_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    tangential_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    thin_prism_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., focal_length_x: _Optional[float] = ..., focal_length_y: _Optional[float] = ..., radial_coeffs: _Optional[_Iterable[float]] = ..., tangential_coeffs: _Optional[_Iterable[float]] = ..., thin_prism_coeffs: _Optional[_Iterable[float]] = ...) -> None: ...
+
+class OpenCVFisheyeCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "focal_length_x", "focal_length_y", "radial_coeffs", "max_angle")
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_X_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_Y_FIELD_NUMBER: _ClassVar[int]
+    RADIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    MAX_ANGLE_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    focal_length_x: float
+    focal_length_y: float
+    radial_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    max_angle: float
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., focal_length_x: _Optional[float] = ..., focal_length_y: _Optional[float] = ..., radial_coeffs: _Optional[_Iterable[float]] = ..., max_angle: _Optional[float] = ...) -> None: ...
+
+class BivariateWindshieldModelParameters(_message.Message):
+    __slots__ = ("reference_poly", "horizontal_poly", "vertical_poly", "horizontal_poly_inverse", "vertical_poly_inverse")
+    class ReferencePolynomial(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        FORWARD: _ClassVar[BivariateWindshieldModelParameters.ReferencePolynomial]
+        BACKWARD: _ClassVar[BivariateWindshieldModelParameters.ReferencePolynomial]
+    FORWARD: BivariateWindshieldModelParameters.ReferencePolynomial
+    BACKWARD: BivariateWindshieldModelParameters.ReferencePolynomial
+    REFERENCE_POLY_FIELD_NUMBER: _ClassVar[int]
+    HORIZONTAL_POLY_FIELD_NUMBER: _ClassVar[int]
+    VERTICAL_POLY_FIELD_NUMBER: _ClassVar[int]
+    HORIZONTAL_POLY_INVERSE_FIELD_NUMBER: _ClassVar[int]
+    VERTICAL_POLY_INVERSE_FIELD_NUMBER: _ClassVar[int]
+    reference_poly: BivariateWindshieldModelParameters.ReferencePolynomial
+    horizontal_poly: _containers.RepeatedScalarFieldContainer[float]
+    vertical_poly: _containers.RepeatedScalarFieldContainer[float]
+    horizontal_poly_inverse: _containers.RepeatedScalarFieldContainer[float]
+    vertical_poly_inverse: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, reference_poly: _Optional[_Union[BivariateWindshieldModelParameters.ReferencePolynomial, str]] = ..., horizontal_poly: _Optional[_Iterable[float]] = ..., vertical_poly: _Optional[_Iterable[float]] = ..., horizontal_poly_inverse: _Optional[_Iterable[float]] = ..., vertical_poly_inverse: _Optional[_Iterable[float]] = ...) -> None: ...
+
+class CameraSpec(_message.Message):
+    __slots__ = ("ftheta_param", "opencv_pinhole_param", "opencv_fisheye_param", "logical_id", "resolution_h", "resolution_w", "shutter_type", "bivariate_windshield_model_param")
+    FTHETA_PARAM_FIELD_NUMBER: _ClassVar[int]
+    OPENCV_PINHOLE_PARAM_FIELD_NUMBER: _ClassVar[int]
+    OPENCV_FISHEYE_PARAM_FIELD_NUMBER: _ClassVar[int]
+    LOGICAL_ID_FIELD_NUMBER: _ClassVar[int]
+    RESOLUTION_H_FIELD_NUMBER: _ClassVar[int]
+    RESOLUTION_W_FIELD_NUMBER: _ClassVar[int]
+    SHUTTER_TYPE_FIELD_NUMBER: _ClassVar[int]
+    BIVARIATE_WINDSHIELD_MODEL_PARAM_FIELD_NUMBER: _ClassVar[int]
+    ftheta_param: FthetaCameraParam
+    opencv_pinhole_param: OpenCVPinholeCameraParam
+    opencv_fisheye_param: OpenCVFisheyeCameraParam
+    logical_id: str
+    resolution_h: int
+    resolution_w: int
+    shutter_type: ShutterType
+    bivariate_windshield_model_param: BivariateWindshieldModelParameters
+    def __init__(self, ftheta_param: _Optional[_Union[FthetaCameraParam, _Mapping]] = ..., opencv_pinhole_param: _Optional[_Union[OpenCVPinholeCameraParam, _Mapping]] = ..., opencv_fisheye_param: _Optional[_Union[OpenCVFisheyeCameraParam, _Mapping]] = ..., logical_id: _Optional[str] = ..., resolution_h: _Optional[int] = ..., resolution_w: _Optional[int] = ..., shutter_type: _Optional[_Union[ShutterType, str]] = ..., bivariate_windshield_model_param: _Optional[_Union[BivariateWindshieldModelParameters, _Mapping]] = ...) -> None: ...
+
+class Image(_message.Message):
+    __slots__ = ("data", "format")
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    FORMAT_FIELD_NUMBER: _ClassVar[int]
+    data: bytes
+    format: ImageFormat
+    def __init__(self, data: _Optional[bytes] = ..., format: _Optional[_Union[ImageFormat, str]] = ...) -> None: ...
+
 class Vec3d(_message.Message):
     __slots__ = ("x", "y", "z")
     X_FIELD_NUMBER: _ClassVar[int]
@@ -152,7 +300,7 @@ class Camera(_message.Message):
     CALIBRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
     CALIBRATION_HASH_FIELD_NUMBER: _ClassVar[int]
     mount_id: str
-    spec: _camera_pb2.CameraSpec
+    spec: CameraSpec
     position_bs_m: Vec3d
     rotation_bs: Euler3d
     role: CameraRole
@@ -163,7 +311,7 @@ class Camera(_message.Message):
     distortion: _containers.RepeatedScalarFieldContainer[float]
     calibration_source: str
     calibration_hash: int
-    def __init__(self, mount_id: _Optional[str] = ..., spec: _Optional[_Union[_camera_pb2.CameraSpec, _Mapping]] = ..., position_bs_m: _Optional[_Union[Vec3d, _Mapping]] = ..., rotation_bs: _Optional[_Union[Euler3d, _Mapping]] = ..., role: _Optional[_Union[CameraRole, str]] = ..., line_width_mode: _Optional[_Union[LineWidthMode, str]] = ..., near_m: _Optional[float] = ..., far_m: _Optional[float] = ..., rate_hz: _Optional[float] = ..., distortion: _Optional[_Iterable[float]] = ..., calibration_source: _Optional[str] = ..., calibration_hash: _Optional[int] = ...) -> None: ...
+    def __init__(self, mount_id: _Optional[str] = ..., spec: _Optional[_Union[CameraSpec, _Mapping]] = ..., position_bs_m: _Optional[_Union[Vec3d, _Mapping]] = ..., rotation_bs: _Optional[_Union[Euler3d, _Mapping]] = ..., role: _Optional[_Union[CameraRole, str]] = ..., line_width_mode: _Optional[_Union[LineWidthMode, str]] = ..., near_m: _Optional[float] = ..., far_m: _Optional[float] = ..., rate_hz: _Optional[float] = ..., distortion: _Optional[_Iterable[float]] = ..., calibration_source: _Optional[str] = ..., calibration_hash: _Optional[int] = ...) -> None: ...
 
 class Strip(_message.Message):
     __slots__ = ("centre_world_m", "width", "semantic", "colour", "pattern", "instance_id")
@@ -237,9 +385,9 @@ class GenerationConfig(_message.Message):
     SEED_IMAGE_FIELD_NUMBER: _ClassVar[int]
     RANDOM_SEED_FIELD_NUMBER: _ClassVar[int]
     prompt: str
-    seed_image: _video_model_pb2.Image
+    seed_image: Image
     random_seed: int
-    def __init__(self, prompt: _Optional[str] = ..., seed_image: _Optional[_Union[_video_model_pb2.Image, _Mapping]] = ..., random_seed: _Optional[int] = ...) -> None: ...
+    def __init__(self, prompt: _Optional[str] = ..., seed_image: _Optional[_Union[Image, _Mapping]] = ..., random_seed: _Optional[int] = ...) -> None: ...
 
 class SceneDefinition(_message.Message):
     __slots__ = ("run_id", "configuration_revision", "cameras", "camera_errors", "static_strips", "static_surface_bands", "origin_world_m", "generation_config")
@@ -324,10 +472,10 @@ class RenderedControlFrame(_message.Message):
     camera_mount_id: str
     source_frame_id: int
     timestamp_us: int
-    image: _video_model_pb2.Image
+    image: Image
     ego_actor_id: str
-    generated_image: _video_model_pb2.Image
-    def __init__(self, camera_mount_id: _Optional[str] = ..., source_frame_id: _Optional[int] = ..., timestamp_us: _Optional[int] = ..., image: _Optional[_Union[_video_model_pb2.Image, _Mapping]] = ..., ego_actor_id: _Optional[str] = ..., generated_image: _Optional[_Union[_video_model_pb2.Image, _Mapping]] = ...) -> None: ...
+    generated_image: Image
+    def __init__(self, camera_mount_id: _Optional[str] = ..., source_frame_id: _Optional[int] = ..., timestamp_us: _Optional[int] = ..., image: _Optional[_Union[Image, _Mapping]] = ..., ego_actor_id: _Optional[str] = ..., generated_image: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
 
 class RenderedControls(_message.Message):
     __slots__ = ("frames",)

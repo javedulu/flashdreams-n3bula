@@ -9,16 +9,15 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
-from omnidreams.impl.grpc.protos import video_model_pb2
 from omnidreams.n3bula import n3bula_pb2
 from omnidreams.n3bula import service as n3bula_service
 from omnidreams.n3bula.service import (
     SURFACE_BAND_PALETTE,
     SURFACE_BAND_PRIMITIVES,
+    N3bulaLudusService,
     _make_scene,
     _OmniDreamsGenerationStream,
     _StreamRenderer,
-    N3bulaLudusService,
 )
 from PIL import Image
 
@@ -81,6 +80,39 @@ def _engine(pipeline: _FakePipeline, device: torch.device = torch.device("cpu"))
     )
 
 
+def test_n3bula_camera_and_image_schemas_preserve_precision() -> None:
+    definition = n3bula_pb2.SceneDefinition(
+        cameras=[
+            n3bula_pb2.Camera(
+                spec=n3bula_pb2.CameraSpec(
+                    opencv_pinhole_param=n3bula_pb2.OpenCVPinholeCameraParam(
+                        principal_point_x=1920.123456789,
+                        focal_length_y=1080.987654321,
+                        radial_coeffs=[1.234567890123e-7],
+                    ),
+                    logical_id="front",
+                    shutter_type=n3bula_pb2.GLOBAL,
+                ),
+                position_bs_m=n3bula_pb2.Vec3d(x=12_345_678.123456789),
+                rotation_bs=n3bula_pb2.Euler3d(yaw_rad=1.234567890123e-7),
+            )
+        ],
+        generation_config=n3bula_pb2.GenerationConfig(
+            seed_image=n3bula_pb2.Image(data=b"seed", format=n3bula_pb2.PNG)
+        ),
+    )
+
+    restored = n3bula_pb2.SceneDefinition.FromString(definition.SerializeToString())
+    camera = restored.cameras[0]
+
+    assert camera.spec.opencv_pinhole_param.principal_point_x == 1920.123456789
+    assert camera.spec.opencv_pinhole_param.radial_coeffs[0] == 1.234567890123e-7
+    assert camera.position_bs_m.x == 12_345_678.123456789
+    assert camera.rotation_bs.yaw_rad == 1.234567890123e-7
+    assert restored.generation_config.seed_image.format == n3bula_pb2.PNG
+    assert restored.generation_config.seed_image.data == b"seed"
+
+
 def test_generation_uses_first_ludus_control_as_seed_without_returning_control_images() -> None:
     pipeline = _FakePipeline()
     generation = _OmniDreamsGenerationStream(
@@ -101,7 +133,9 @@ def test_generation_uses_first_ludus_control_as_seed_without_returning_control_i
 
     assert responses is not None and len(responses) == 2
     assert all(not response.HasField("image") for response in responses)
-    assert all(response.generated_image.format == video_model_pb2.JPEG for response in responses)
+    assert all(
+        response.generated_image.format == n3bula_pb2.JPEG for response in responses
+    )
     assert all(response.generated_image.data for response in responses)
     assert pipeline.initialized_text == [["drive through daylight"]]
     assert pipeline.generated_indices == [0]
@@ -153,9 +187,7 @@ def test_generation_uses_explicit_seed_image_and_prompt() -> None:
     pipeline = _FakePipeline()
     config = n3bula_pb2.GenerationConfig(
         prompt="night highway",
-        seed_image=video_model_pb2.Image(
-            data=_png((0, 0, 255)), format=video_model_pb2.PNG
-        ),
+        seed_image=n3bula_pb2.Image(data=_png((0, 0, 255)), format=n3bula_pb2.PNG),
         random_seed=17,
     )
 
@@ -268,7 +300,7 @@ def test_generation_encodes_cuda_outputs_with_nvjpeg(monkeypatch) -> None:
 
     assert responses is not None and len(responses) == 2
     for response in responses:
-        assert response.generated_image.format == video_model_pb2.JPEG
+        assert response.generated_image.format == n3bula_pb2.JPEG
         with Image.open(BytesIO(response.generated_image.data)) as image:
             assert image.size == (4, 3)
             assert image.mode == "RGB"
@@ -589,6 +621,6 @@ def test_ludus_service_stream_flushes_pending_frames_on_half_close_and_reopens()
 
     assert [response.source_frame_id for response in responses] == [10, 11, 12]
     assert [response.source_frame_id for response in next_stream] == [13]
-    assert all(response.image.format == video_model_pb2.PNG for response in responses)
-    assert all(response.generated_image.format == video_model_pb2.JPEG for response in responses)
+    assert all(response.image.format == n3bula_pb2.PNG for response in responses)
+    assert all(response.generated_image.format == n3bula_pb2.JPEG for response in responses)
     assert "stream closed: controls=3, generated=3" in log_output.getvalue()

@@ -113,8 +113,6 @@ packages = [
     "omnidreams.impl.conditioning",
     "omnidreams.impl.conditioning.world_scenario",
     "omnidreams.impl.encoder",
-    "omnidreams.impl.grpc",
-    "omnidreams.impl.grpc.protos",
     "omnidreams.impl.native",
     "omnidreams.impl.scripts",
     "omnidreams.impl.tools",

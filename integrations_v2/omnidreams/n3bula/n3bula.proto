@@ -4,8 +4,100 @@ syntax = "proto3";
 
 package omnidreams.n3bula;
 
-import "omnidreams/impl/grpc/protos/camera.proto";
-import "omnidreams/impl/grpc/protos/video_model.proto";
+enum ShutterType {
+    UNKNOWN = 0;
+    ROLLING_TOP_TO_BOTTOM = 1;
+    ROLLING_LEFT_TO_RIGHT = 2;
+    ROLLING_BOTTOM_TO_TOP = 3;
+    ROLLING_RIGHT_TO_LEFT = 4;
+    GLOBAL = 5;
+}
+
+message LinearCde {
+    double linear_c = 1;
+    double linear_d = 2;
+    double linear_e = 3;
+}
+
+message FthetaCameraParam {
+    enum PolynomialType {
+        UNKNOWN = 0;
+        PIXELDIST_TO_ANGLE = 1;
+        ANGLE_TO_PIXELDIST = 2;
+    }
+
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    PolynomialType reference_poly = 3;
+    repeated double pixeldist_to_angle_poly = 4;
+    repeated double angle_to_pixeldist_poly = 5;
+    double max_angle = 6;
+    LinearCde linear_cde = 7;
+}
+
+message OpenCVPinholeCameraParam {
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    double focal_length_x = 3;
+    double focal_length_y = 4;
+    repeated double radial_coeffs = 5;
+    repeated double tangential_coeffs = 6;
+    repeated double thin_prism_coeffs = 7;
+}
+
+message OpenCVFisheyeCameraParam {
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    double focal_length_x = 3;
+    double focal_length_y = 4;
+    repeated double radial_coeffs = 5;
+    double max_angle = 6;
+}
+
+message BivariateWindshieldModelParameters {
+    enum ReferencePolynomial {
+        FORWARD = 0;
+        BACKWARD = 1;
+    }
+
+    ReferencePolynomial reference_poly = 1;
+    repeated double horizontal_poly = 2;
+    repeated double vertical_poly = 3;
+    repeated double horizontal_poly_inverse = 4;
+    repeated double vertical_poly_inverse = 5;
+}
+
+message CameraSpec {
+    oneof camera_param {
+        FthetaCameraParam ftheta_param = 2;
+        OpenCVPinholeCameraParam opencv_pinhole_param = 3;
+        OpenCVFisheyeCameraParam opencv_fisheye_param = 4;
+    }
+
+    string logical_id = 5;
+    uint32 resolution_h = 7;
+    uint32 resolution_w = 8;
+    ShutterType shutter_type = 9;
+
+    oneof external_distortion {
+        BivariateWindshieldModelParameters bivariate_windshield_model_param = 10;
+    }
+}
+
+enum ImageFormat {
+    UNDEFINED = 0;
+    PNG = 1;
+    JPEG = 2;
+    JPEG2000 = 3;
+    RGB_UINT8_PLANAR = 4;
+    AVC = 5;
+    AV1 = 6;
+}
+
+message Image {
+    bytes data = 1;
+    ImageFormat format = 2;
+}
 
 // World-space values are doubles so georeferenced coordinates and camera
 // calibration survive the SUMO-to-Ludus boundary without float truncation.
@@ -88,7 +180,7 @@ enum LineWidthMode {
 
 message Camera {
     string mount_id = 1;
-    omnidreams.camera.CameraSpec spec = 2;
+    CameraSpec spec = 2;
     Vec3d position_bs_m = 3; // Camera origin in the body frame, metres.
     Euler3d rotation_bs = 4;
     CameraRole role = 5;
@@ -140,7 +232,7 @@ message MeshInstance {
 
 message GenerationConfig {
     string prompt = 1;
-    omnidreams.video_model.Image seed_image = 2;
+    Image seed_image = 2;
     fixed64 random_seed = 3;
 }
 
@@ -190,9 +282,9 @@ message RenderedControlFrame {
     string camera_mount_id = 1;
     uint64 source_frame_id = 2;
     uint64 timestamp_us = 3;
-    omnidreams.video_model.Image image = 4;
+    Image image = 4;
     string ego_actor_id = 5;
-    omnidreams.video_model.Image generated_image = 6;
+    Image generated_image = 6;
 }
 
 message RenderedControls {

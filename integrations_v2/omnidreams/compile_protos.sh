@@ -22,12 +22,6 @@ cd "$SCRIPT_DIR/.."
 uv run --package flashdreams-omnidreams --extra codegen python -m grpc_tools.protoc \
     -I. \
     --python_out=. \
-    --pyi_out=. \
-    omnidreams/impl/grpc/protos/*.proto \
-    omnidreams/n3bula/n3bula.proto
-
-
-uv run --package flashdreams-omnidreams --extra codegen python -m grpc_tools.protoc \
-    -I. \
     --grpc_python_out=. \
+    --pyi_out=. \
     omnidreams/n3bula/n3bula.proto
