@@ -28,7 +28,7 @@ service WorldModelService {
 }
 
 message StaticWorldMap {
-	bytes hdmap_parquets = 1; // bytes of zip-compressed parquet files
+    bytes hdmap_parquets = 1; // bytes of zip-compressed parquet files
 }
 
 message SessionId {
@@ -74,24 +74,24 @@ message Image {
 
 // Text prompt for guiding video generation
 message TextPrompt {
-    string positive = 1;  // Positive prompt describing desired content
-    string negative = 2;  // Negative prompt describing content to avoid
+    string positive = 1; // Positive prompt describing desired content
+    string negative = 2; // Negative prompt describing content to avoid
 }
 
 // Debug options for development and visualization
 message DebugOptions {
-    bool return_hdmap_frames = 1;  // Return rendered HD map condition frames
-    bool skip_video_generation = 2;  // Skip video model inference, only render HDMap (fast exploration mode)
+    bool return_hdmap_frames = 1; // Return rendered HD map condition frames
+    bool skip_video_generation = 2; // Skip video model inference, only render HDMap (fast exploration mode)
 }
 
 message SessionRequest {
     StaticWorldMap static_world_map = 1;
-    TextPrompt text_prompt = 2;  // Optional text prompt for generation
-    DebugOptions debug_options = 3;      // Optional debug output options
-    repeated camera.CameraSpec camera_specs = 4;  // One per view
-    repeated Image initial_frames = 5;            // One conditioning frame per view
-    repeated common.Pose rig_to_camera = 6; // Rig-to-camera extrinsics (one per camera_spec)
-    fixed64 random_seed = 7;  // Optional random seed for deterministic generation (0 = server chooses)
+    TextPrompt text_prompt = 2; // Optional text prompt for generation
+    DebugOptions debug_options = 3; // Optional debug output options
+    repeated camera.CameraSpec camera_specs = 4; // One per view
+    repeated Image initial_frames = 5; // One conditioning frame per view
+    repeated common.Pose rig_to_camera = 6; // Rig-to-camera extrinsics
+    fixed64 random_seed = 7; // Optional deterministic seed (0 = server chooses)
 }
 
 message SessionCloseRequest {
@@ -100,11 +100,10 @@ message SessionCloseRequest {
 
 message VideoChunkRequest {
     SessionId session_id = 1;
-	common.Trajectory rig_trajectory = 2;  // Ego rig trajectory
+    common.Trajectory rig_trajectory = 2; // Ego rig trajectory
     DynamicWorldState dynamic_state = 3; // within requested time range
 }
 
-// Per-camera output frames
 message CameraOutput {
     string camera_logical_id = 1;
     repeated Image rgb_frames = 2;
@@ -112,40 +111,29 @@ message CameraOutput {
 }
 
 message VideoChunkReturn {
-    // Per-camera output frames
     repeated CameraOutput camera_outputs = 1;
 }
 
-// =============================================================================
-// Session Recording/Replay
-// =============================================================================
-
-// Paired request/response for start_session RPC
 message StartSessionEntry {
     SessionRequest request = 1;
     SessionId response = 2;
 }
 
-// Paired request/response for render_video_chunk RPC
 message RenderVideoChunkEntry {
     VideoChunkRequest request = 1;
     VideoChunkReturn response = 2;
 }
 
-// Paired request/response for close_session RPC
 message CloseSessionEntry {
     SessionCloseRequest request = 1;
     common.Empty response = 2;
 }
 
-// Log entry for recording gRPC sessions for replay and testing.
-// Each entry captures a single RPC call with its request, response, and timing.
 message LogEntry {
-    uint64 seq = 1;                    // Sequence number within the recording
-    uint64 timestamp_ns = 2;           // Wall clock when request was received
-    uint64 duration_ns = 3;            // Time to process the request
+    uint64 seq = 1; // Sequence number within the recording
+    uint64 timestamp_ns = 2; // Wall clock when request was received
+    uint64 duration_ns = 3; // Time to process the request
 
-    // RPC call (one of) - each variant contains a matched request/response pair
     oneof call {
         StartSessionEntry start_session = 10;
         RenderVideoChunkEntry render_video_chunk = 11;

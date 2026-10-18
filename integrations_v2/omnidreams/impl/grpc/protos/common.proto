@@ -78,14 +78,10 @@ message VersionId {
 
     string version_id = 1;
     string git_hash = 2;
-
-    // grpc_api_version
     APIVersion grpc_api_version = 3;
-
-    // any additional data such as hardware config?
 }
 
-message SessionRequestStatus {} // empty; reserved name in case we want to extend it in the future
+message SessionRequestStatus {}
 
 message AvailableScenesReturn {
     repeated string scene_ids = 1;

@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Praneeth Samineni.
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -21,7 +22,12 @@ cd "$SCRIPT_DIR/.."
 uv run --package flashdreams-omnidreams --extra codegen python -m grpc_tools.protoc \
     -I. \
     --python_out=. \
-    --grpc_python_out=. \
     --pyi_out=. \
     omnidreams/impl/grpc/protos/*.proto \
+    omnidreams/n3bula/n3bula.proto
+
+
+uv run --package flashdreams-omnidreams --extra codegen python -m grpc_tools.protoc \
+    -I. \
+    --grpc_python_out=. \
     omnidreams/n3bula/n3bula.proto

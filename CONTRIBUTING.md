@@ -140,9 +140,11 @@ Pull requests without DCO sign-off will be asked to rebase before merge.
 This is a hard gate; please don't take a polite ping personally.
 
 NVIDIA contributors and external contributors follow the *same* DCO
-process. NVIDIA-internal IP review, where applicable, is handled by
-NVIDIA reviewers on your behalf — you do not need to engage with it as
-an outside contributor.
+process. NVIDIA reviewers follow the
+[NVIDIA IP review process](https://nv/ip_review_process) for ongoing project
+modifications and third-party contributions. Reviewers handle this internal
+process on your behalf — you do not need to engage with it as an outside
+contributor.
 
 ### Signing Your Work
 
@@ -220,9 +222,23 @@ investing implementation effort.
 - If a review comment is unclear, ask. We'd rather have a 30-second
   clarifying exchange than a misunderstanding turning into rework.
 
-We aim for an initial review on every PR within two business days. If
-your PR has been quiet longer than that, please feel free to leave a
-short ping comment.
+### Contributor expectations
+
+We welcome community pull requests. Review timing depends on project
+priorities and maintainer availability. Contributions should be
+useful, tested, and easy to maintain. Contributors are responsible for
+understanding and checking all code they submit, including generated
+code, and providing relevant tests or steps to verify the change.
+Maintainers should provide an initial review and respond to updates
+within 7 calendar days. Contributors should respond to review feedback
+within 7 calendar days. If either side needs more time, they should
+say so in the PR. Maintainers may close PRs that remain inactive after
+a reminder or do not meet the project’s needs or quality standards.
+Before closing a public issue or PR, maintainers will check whether
+users or documentation reference it. An issue or PR should not be
+closed simply because it seems unnecessary. When closing, maintainers
+will explain the reason and point to an alternative approach or
+tracking issue where available.
 
 ## File Tree Of FlashDreams
 
@@ -271,29 +287,19 @@ docs/source/                    # Zensical Markdown sources
   FlashDreams above. Use `pytest` and prefer existing fixtures over
   hand-rolled setup. See
   [Testing](#testing) for discovery and marker requirements.
-- Every source file added by a contribution must include the SPDX
-  header used elsewhere in the project:
+- Every source file added by a contribution must include this concise
+  two-line SPDX header:
 
   ```python
-  # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  # SPDX-FileCopyrightText: Copyright (c) <YEAR> <COPYRIGHT HOLDER>
   # SPDX-License-Identifier: Apache-2.0
-  #
-  # Licensed under the Apache License, Version 2.0 (the "License");
-  # you may not use this file except in compliance with the License.
-  # You may obtain a copy of the License at
-  #
-  # http://www.apache.org/licenses/LICENSE-2.0
-  #
-  # Unless required by applicable law or agreed to in writing, software
-  # distributed under the License is distributed on an "AS IS" BASIS,
-  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  # See the License for the specific language governing permissions and
-  # limitations under the License.
   ```
 
-  External contributors should add their own copyright line *above* the
-  NVIDIA line if they wish to be attributed; both attributions are
-  retained.
+  Use the current calendar year and the name of the actual copyright
+  holder, which may be the contributor, their organization, or NVIDIA.
+  Preserve existing copyright notices when modifying a file; multiple
+  `SPDX-FileCopyrightText` lines are allowed. The longer Apache-2.0
+  boilerplate is accepted but not preferred.
 
 ## Testing
 
@@ -400,7 +406,6 @@ Available integration packages:
 | `integrations_v2/cosmos_predict2` | `flashdreams-cosmos-predict2` |
 | `integrations_v2/fastvideo_causal_wan22` | `flashdreams-fastvideo-causal-wan22` |
 | `integrations_v2/flashvsr` | `flashdreams-flashvsr` |
-| `integrations_v2/hy_worldplay` | `flashdreams-hy-worldplay` |
 | `integrations_v2/lingbot` | `flashdreams-lingbot` |
 | `integrations_v2/omnidreams` | `flashdreams-omnidreams` |
 | `integrations_v2/self_forcing` | `flashdreams-self-forcing` |
