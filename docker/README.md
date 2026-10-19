@@ -137,8 +137,12 @@ FLASHDREAMS_RESOLUTION=704p \
 bash docker/build_n3bula_with_docker.sh omnidreams-n3bula:rtx-pro-6000
 ```
 
-Other registered profiles include `omnidreams-optimized-gb300` and
-`omnidreams-rtx-5090`. The image build validates the selected config and
+Other registered profiles include `omnidreams-optimized-gb300`,
+`omnidreams-rtx-5090`, `omnidreams-perf-responsive`,
+`omnidreams-fast-perf-responsive`, and
+`omnidreams-optimized-rtx-pro-6000-responsive`. Responsive configs retain
+recent visual history for long-rollout experiments and can be selected per run
+with `--flashdreams-pipeline-config`. The image build validates the selected config and
 resolution against the checked-in server registry. The measured 24.54 frames/s
 result is specific to `omnidreams-perf` at `640p`; other GPU profiles must be
 measured separately. Set `FLASHDREAMS_UID` to match the host cache owner when
