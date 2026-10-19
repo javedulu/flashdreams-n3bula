@@ -54,8 +54,20 @@ def test_build_engine_sets_up_single_view_pipeline(monkeypatch) -> None:
     assert engine.device == torch.device("cpu")
     assert engine.conditioning_wrapper.pipeline is pipeline
     assert engine.conditioning_wrapper.video_resolution_wh == (1168, 640)
+    assert engine.flashvsr_session is None
+    assert engine.flashvsr_resolution_wh is None
     assert pipeline.device == torch.device("cpu")
     assert pipeline.evaluating
+
+
+def test_parse_args_keeps_flashvsr_disabled_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("N3BULA_ENABLE_FLASHVSR", raising=False)
+
+    args = n3bula_server.parse_args([])
+
+    assert args.enable_flashvsr is False
+    assert args.flashvsr_scale == 2
+    assert args.flashvsr_sparse_ratio == 1.5
 
 
 def test_build_engine_rejects_multiview_pipeline(monkeypatch) -> None:

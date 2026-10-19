@@ -9,6 +9,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
+import torch.nn.functional as F
+from flashdreams.infra.postprocess import VideoChunk
 from omnidreams.n3bula import n3bula_pb2
 from omnidreams.n3bula import service as n3bula_service
 from omnidreams.n3bula.service import (
@@ -48,6 +50,33 @@ class _FakePipeline:
 
     def finalize(self, index, cache) -> None:
         self.finalized_indices.append(index)
+
+
+class _FakeBufferedFlashVSRSession:
+    def __init__(self) -> None:
+        self.chunks = []
+        self.submitted_metadata = []
+        self.reset_count = 0
+
+    def reset(self) -> None:
+        self.chunks.clear()
+        self.reset_count += 1
+
+    def process(self, chunk: VideoChunk) -> list[VideoChunk]:
+        self.chunks.append(chunk)
+        self.submitted_metadata.append(chunk.metadata)
+        return []
+
+    def flush(self) -> list[VideoChunk]:
+        if not self.chunks:
+            return []
+        tensor = torch.cat([chunk.tensor for chunk in self.chunks])
+        output = F.interpolate(
+            tensor, scale_factor=2, mode="bilinear", align_corners=False
+        )
+        metadata = {"input_chunks": tuple(chunk.metadata for chunk in self.chunks)}
+        self.chunks.clear()
+        return [VideoChunk(tensor=output, layout="tchw", metadata=metadata)]
 
 
 def _png(color: tuple[int, int, int]) -> bytes:
@@ -141,6 +170,75 @@ def test_generation_uses_first_ludus_control_as_seed_without_returning_control_i
     assert pipeline.generated_indices == [0]
     assert pipeline.finalized_indices == [0]
     assert pipeline.inputs[0].shape == (1, 1, 2, 3, 3, 4)
+
+
+def test_flashvsr_flush_preserves_temporal_metadata_and_response_pairing() -> None:
+    pipeline = _FakePipeline()
+    session = _FakeBufferedFlashVSRSession()
+    engine = _engine(pipeline)
+    engine.flashvsr_session = session
+    frames = [
+        n3bula_pb2.SceneFrame(
+            source_frame_id=41,
+            timestamp_us=1_230_000,
+            simulation_time_s=12.3,
+            stale=True,
+            ego_actor_id="ego-1",
+            camera_mount_id="FWC_C",
+        ),
+        n3bula_pb2.SceneFrame(
+            source_frame_id=42,
+            timestamp_us=1_263_333,
+            simulation_time_s=12.333333,
+            ego_actor_id="ego-1",
+            camera_mount_id="FWC_C",
+        ),
+    ]
+    generation = _OmniDreamsGenerationStream(
+        engine,
+        n3bula_pb2.GenerationConfig(prompt="drive through daylight"),
+        (4, 3),
+        run_id="run-17",
+    )
+
+    generation.add(frames[0], _rendered_control((255, 0, 0), frames[0]))
+    assert generation.add(
+        frames[1], _rendered_control((0, 255, 0), frames[1])
+    ) == []
+    responses = generation.flush()
+
+    assert responses is not None
+    assert [response.source_frame_id for response in responses] == [41, 42]
+    assert [response.timestamp_us for response in responses] == [1_230_000, 1_263_333]
+    assert generation.generated_frames == 2
+    assert session.reset_count == 1
+    assert session.chunks == []
+    assert session.submitted_metadata == [
+        {
+            "n3bula_source_frames": [
+                {
+                    "run_id": "run-17",
+                    "source_frame_id": 41,
+                    "timestamp_us": 1_230_000,
+                    "simulation_time_s": 12.3,
+                    "stale": True,
+                    "ego_actor_id": "ego-1",
+                    "camera_mount_id": "FWC_C",
+                },
+                {
+                    "run_id": "run-17",
+                    "source_frame_id": 42,
+                    "timestamp_us": 1_263_333,
+                    "simulation_time_s": 12.333333,
+                    "stale": False,
+                    "ego_actor_id": "ego-1",
+                    "camera_mount_id": "FWC_C",
+                },
+            ]
+        }
+    ]
+    with Image.open(BytesIO(responses[0].generated_image.data)) as image:
+        assert image.size == (8, 6)
 
 
 def test_generation_returns_control_images_when_debug_enabled(monkeypatch) -> None:
@@ -313,7 +411,7 @@ class _FakeStreamRenderer:
     def set_definition(self, definition) -> None:
         pass
 
-    def render(self, frame, timings=None, defer_png=False):
+    def render(self, frame, timings=None, defer_png=False, include_png=True):
         if timings is not None:
             timings.update(
                 scene_prepare_seconds=0.0,
@@ -580,7 +678,8 @@ def test_ludus_scene_splits_long_polylines_at_renderer_limit() -> None:
     assert pool.varrays_prefix_sum.tolist() == [256, 301]
 
 
-def test_ludus_service_stream_flushes_pending_frames_on_half_close_and_reopens() -> None:
+def test_ludus_service_stream_flushes_pending_frames_on_half_close_and_reopens(monkeypatch) -> None:
+    monkeypatch.setattr(n3bula_service, "RETURN_CONTROL_IMAGES", True)
     pipeline = _FakePipeline()
     service = N3bulaLudusService(_engine(pipeline))
     original_renderer = n3bula_service._StreamRenderer

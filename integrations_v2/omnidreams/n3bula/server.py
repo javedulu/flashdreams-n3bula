@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import os
 import signal
 import threading
 from concurrent import futures
@@ -14,6 +15,7 @@ from dataclasses import dataclass
 
 import grpc
 import torch
+from flashdreams.infra.postprocess import VideoPostProcessorSession, VideoSpec
 from loguru import logger
 from omnidreams.config import OMNIDREAMS_CONFIGS
 from omnidreams.impl.pipeline import OmnidreamsPipeline
@@ -50,11 +52,20 @@ class N3bulaEngine:
     conditioning_wrapper: _PipelineRuntime
     """Pipeline and output shape consumed by the N3BULA scene service."""
 
+    flashvsr_session: VideoPostProcessorSession | None = None
+    """Prepared optional FlashVSR session shared by serialized N3BULA streams."""
+
+    flashvsr_resolution_wh: tuple[int, int] | None = None
+    """Upscaled output width and height when FlashVSR is enabled."""
+
 
 def build_engine(
     pipeline_config_name: str,
     resolution: str,
     device: torch.device | str = "cuda:0",
+    enable_flashvsr: bool = False,
+    flashvsr_scale: int = 2,
+    flashvsr_sparse_ratio: float = 1.5,
 ) -> N3bulaEngine:
     """Set up a supported single-view OmniDreams pipeline for N3BULA.
 
@@ -88,12 +99,43 @@ def build_engine(
     if not isinstance(pipeline, OmnidreamsPipeline):
         raise TypeError(f"expected OmnidreamsPipeline, got {type(pipeline).__name__}")
     pipeline.eval()
+    flashvsr_session = None
+    flashvsr_resolution_wh = None
+    if enable_flashvsr:
+        if flashvsr_scale not in (2, 4):
+            raise ValueError("FlashVSR scale must be 2 or 4")
+        if (pipeline.get_num_output_frames(0), pipeline.get_num_output_frames(1)) != (5, 8):
+            raise ValueError(
+                "N3BULA FlashVSR requires OmniDreams chunk sizes of 5 then 8 frames"
+            )
+        from flashvsr.impl.postprocess import FlashVSRPostProcessorConfig
+
+        input_spec = VideoSpec(
+            height=RESOLUTION_MAP[resolution][1],
+            width=RESOLUTION_MAP[resolution][0],
+        )
+        postprocess_config = FlashVSRPostProcessorConfig(
+            scale=flashvsr_scale,
+            chunk_size=8,
+            sparse_ratio=flashvsr_sparse_ratio,
+            device=str(device),
+            color_corrector_implementation="cuda",
+            # Compile and CUDA graph with prepare() corrupt the first steady chunk.
+            compile_network=os.environ.get("N3BULA_FLASHVSR_COMPILE") == "1",
+            use_cuda_graph=os.environ.get("N3BULA_FLASHVSR_COMPILE") == "1",
+        )
+        flashvsr_session = postprocess_config.setup().start(input_spec)
+        flashvsr_session.prepare()
+        output_spec = postprocess_config.output_spec(input_spec)
+        flashvsr_resolution_wh = (output_spec.width, output_spec.height)
     return N3bulaEngine(
         device=device,
         conditioning_wrapper=_PipelineRuntime(
             pipeline=pipeline,
             video_resolution_wh=RESOLUTION_MAP[resolution],
         ),
+        flashvsr_session=flashvsr_session,
+        flashvsr_resolution_wh=flashvsr_resolution_wh,
     )
 
 
@@ -151,6 +193,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="640p",
         choices=sorted(RESOLUTION_MAP),
     )
+    parser.add_argument(
+        "--enable-flashvsr",
+        action="store_true",
+        default=os.environ.get("N3BULA_ENABLE_FLASHVSR", "0").lower()
+        in {"1", "true", "yes"},
+        help="Upscale generated N3BULA frames with the CUDA FlashVSR postprocessor",
+    )
+    parser.add_argument("--flashvsr-scale", type=int, choices=(2, 4), default=2)
+    parser.add_argument(
+        "--flashvsr-sparse-ratio", type=float, choices=(1.5, 2.0), default=1.5
+    )
     return parser.parse_args(argv)
 
 
@@ -160,7 +213,14 @@ def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for the N3BULA gRPC server")
     torch.cuda.set_device(0)
-    engine = build_engine(args.pipeline_config_name, args.resolution, "cuda:0")
+    engine = build_engine(
+        args.pipeline_config_name,
+        args.resolution,
+        "cuda:0",
+        enable_flashvsr=args.enable_flashvsr,
+        flashvsr_scale=args.flashvsr_scale,
+        flashvsr_sparse_ratio=args.flashvsr_sparse_ratio,
+    )
     server, bound_port = create_server(engine, args.host, args.port, args.max_workers)
     address = f"{args.host}:{bound_port}"
     shutdown_requested = threading.Event()

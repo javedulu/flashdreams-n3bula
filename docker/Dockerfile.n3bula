@@ -22,6 +22,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
     LUDUS_RENDERER_CUDA_ARCH_LIST=12.0a \
     LUDUS_RENDERER_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    TORCH_CUDA_ARCH_LIST=12.0a \
+    TORCH_EXTENSIONS_DIR=/opt/flashdreams/artifacts/flashvsr/torch_extensions \
     HF_HOME=/home/flashdreams/.cache/huggingface
 
 RUN apt-get update -qq \
@@ -84,9 +86,14 @@ RUN --mount=type=cache,target=/tmp/omnidreams-native-build,uid=${FLASHDREAMS_UID
      && mkdir -p /opt/flashdreams/artifacts/omnidreams/native-build/torch_extensions \
      && cp -a /tmp/omnidreams-native-build/torch_extensions/. /opt/flashdreams/artifacts/omnidreams/native-build/torch_extensions/
 
+RUN TORCH_CUDA_ARCH_LIST=12.0a MAX_JOBS=8 \
+        uv run --package flashdreams-omnidreams --no-sync python -c \
+            "from flashvsr.impl import corrector; extension = corrector._load_adain_cuda_extension(); assert extension is not None, repr(corrector._ADAIN_CUDA_EXTENSION_LOAD_ERROR); print('Prebuilt FlashVSR CUDA AdaIN:', extension.__name__)"
+
 ENV N3BULA_GPU_CONTROL_INPUT=1 \
     N3BULA_GPU_JPEG_ENCODING=1 \
-    N3BULA_RETURN_CONTROL_IMAGES=0
+    N3BULA_RETURN_CONTROL_IMAGES=0 \
+    N3BULA_ENABLE_FLASHVSR=0
 
 CMD ["bash"]
 
@@ -144,6 +151,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OMNIDREAMS_SINGLEVIEW_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
     LUDUS_RENDERER_CUDA_ARCH_LIST=12.0a \
     LUDUS_RENDERER_NATIVE_BUILD_ROOT=/opt/flashdreams/artifacts/omnidreams/native-build \
+    TORCH_CUDA_ARCH_LIST=12.0a \
+    TORCH_EXTENSIONS_DIR=/opt/flashdreams/artifacts/flashvsr/torch_extensions \
     HF_HOME=/home/flashdreams/.cache/huggingface
 
 RUN apt-get update -qq \
@@ -158,7 +167,8 @@ COPY --chmod=0755 --from=release-build /opt/flashdreams/docker/n3bula-entrypoint
 
 ENV N3BULA_GPU_CONTROL_INPUT=1 \
     N3BULA_GPU_JPEG_ENCODING=1 \
-    N3BULA_RETURN_CONTROL_IMAGES=0
+    N3BULA_RETURN_CONTROL_IMAGES=0 \
+    N3BULA_ENABLE_FLASHVSR=0
 
 USER flashdreams
 WORKDIR /opt/flashdreams/integrations_v2

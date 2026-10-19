@@ -9,7 +9,7 @@ import os
 import random
 import threading
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from io import BytesIO
 
@@ -48,6 +48,7 @@ from ludus_renderer._ops.primitives import (
     TimestampedScene,
 )
 from ludus_renderer.torch import LudusCudaTimestampedContext
+from flashdreams.infra.postprocess import VideoChunk, to_bvtchw
 from omnidreams.n3bula import n3bula_pb2, n3bula_pb2_grpc
 from PIL import Image
 from scipy.spatial.transform import Rotation
@@ -773,7 +774,7 @@ class _StreamRenderer:
 
 
 class _OmniDreamsGenerationStream:
-    def __init__(self, engine, generation_config, control_size):
+    def __init__(self, engine, generation_config, control_size, run_id=""):
         self.engine = engine
         self.wrapper = engine.conditioning_wrapper
         self.pipeline = self.wrapper.pipeline
@@ -797,6 +798,12 @@ class _OmniDreamsGenerationStream:
         self.pending = []
         self.generated_frames = 0
         self.generation_seconds = 0.0
+        self.flashvsr_session = getattr(engine, "flashvsr_session", None)
+        self.flashvsr_pending = deque()
+        self.flashvsr_seconds = 0.0
+        self.run_id = run_id
+        if self.flashvsr_session is not None:
+            self.flashvsr_session.reset()
 
         if self.random_seed:
             random.seed(self.random_seed)
@@ -886,15 +893,111 @@ class _OmniDreamsGenerationStream:
         return self._generate_pending(self.chunk_size)
 
     def flush(self):
-        if not self.pending:
-            return None
-        pending_count = len(self.pending)
-        padding = self.chunk_size - pending_count
-        controls = [item[1] for item in self.pending]
-        if padding:
-            controls.extend([controls[-1]] * padding)
-        result = self._generate_pending(pending_count, controls)
-        return result
+        responses = []
+        if self.pending:
+            pending_count = len(self.pending)
+            padding = self.chunk_size - pending_count
+            controls = [item[1] for item in self.pending]
+            if padding:
+                controls.extend([controls[-1]] * padding)
+            responses.extend(self._generate_pending(pending_count, controls))
+        if self.flashvsr_session is not None:
+            started = time.perf_counter()
+            output_chunks = self.flashvsr_session.flush()
+            if self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            self.flashvsr_seconds += time.perf_counter() - started
+            tail_responses = self._encode_output_groups(
+                self._flashvsr_output_groups(output_chunks),
+                {
+                    "control_png_wait_seconds": 0.0,
+                    "control_png_async_seconds": 0.0,
+                    "output_copy_seconds": 0.0,
+                    "jpeg_encode_seconds": 0.0,
+                    "jpeg_copy_seconds": 0.0,
+                },
+            )
+            self.generated_frames += len(tail_responses)
+            responses.extend(tail_responses)
+            if self.flashvsr_pending:
+                raise RuntimeError(
+                    f"FlashVSR left {len(self.flashvsr_pending)} source frames without output"
+                )
+        return responses or None
+
+    def _flashvsr_output_groups(self, output_chunks):
+        groups = []
+        for output_chunk in output_chunks:
+            output = to_bvtchw(output_chunk.tensor, layout=output_chunk.layout)[0, 0]
+            source_frames = [
+                source_frame
+                for input_chunk in output_chunk.metadata.get("input_chunks", ())
+                for source_frame in input_chunk.get("n3bula_source_frames", ())
+            ]
+            if output.shape[0] != len(source_frames):
+                raise RuntimeError(
+                    "FlashVSR output count does not match its source-frame metadata: "
+                    f"{output.shape[0]} != {len(source_frames)}"
+                )
+            source_items = []
+            for source_frame in source_frames:
+                if not self.flashvsr_pending:
+                    raise RuntimeError("FlashVSR produced more frames than N3BULA submitted")
+                source_item, expected_frame = self.flashvsr_pending.popleft()
+                if expected_frame != source_frame:
+                    raise RuntimeError(
+                        "FlashVSR changed source-frame order or temporal metadata: "
+                        f"expected {expected_frame}, got {source_frame}"
+                    )
+                source_items.append(source_item)
+            groups.append((output, source_items))
+        return groups
+
+    def _encode_output_groups(self, output_groups, timings):
+        responses = []
+        for generated, source_items in output_groups:
+            output_copy_started = time.perf_counter()
+            generated = ((generated.float().clamp(-1, 1) + 1) * 127.5).round().byte()
+            gpu_jpeg = GPU_JPEG_ENCODING and generated.device.type == "cuda"
+            if gpu_jpeg:
+                generated = generated.contiguous()
+            else:
+                generated = generated.permute(0, 2, 3, 1).cpu().numpy()
+            timings["output_copy_seconds"] += time.perf_counter() - output_copy_started
+
+            pngs = [
+                self._control_png(item[1], timings)
+                for item in source_items
+            ] if RETURN_CONTROL_IMAGES else [None] * len(source_items)
+            jpeg_data = None
+            if gpu_jpeg:
+                jpeg_started = time.perf_counter()
+                encoded_jpegs = encode_jpeg(list(generated.unbind(0)), quality=90)
+                torch.cuda.synchronize(self.device)
+                timings["jpeg_encode_seconds"] += time.perf_counter() - jpeg_started
+                jpeg_copy_started = time.perf_counter()
+                jpeg_data = [encoded.cpu().numpy().tobytes() for encoded in encoded_jpegs]
+                timings["jpeg_copy_seconds"] += time.perf_counter() - jpeg_copy_started
+            else:
+                jpeg_started = time.perf_counter()
+                for index in range(len(source_items)):
+                    encoded = BytesIO()
+                    Image.fromarray(generated[index], mode="RGB").save(
+                        encoded, format="JPEG", quality=90
+                    )
+                    jpeg_data = jpeg_data or []
+                    jpeg_data.append(encoded.getvalue())
+                timings["jpeg_encode_seconds"] += time.perf_counter() - jpeg_started
+
+            for index, ((_, control, _), png) in enumerate(zip(source_items, pngs)):
+                rendered = control.response(png)
+                rendered.generated_image.CopyFrom(
+                    n3bula_pb2.Image(
+                        data=jpeg_data[index], format=n3bula_pb2.JPEG
+                    )
+                )
+                responses.append(rendered)
+        return responses
 
     def _generate_pending(self, output_count: int, controls=None):
         pending = self.pending
@@ -906,6 +1009,10 @@ class _OmniDreamsGenerationStream:
             "control_h2d_seconds": 0.0,
             "control_png_wait_seconds": 0.0,
             "control_png_async_seconds": 0.0,
+            "flashvsr_seconds": 0.0,
+            "output_copy_seconds": 0.0,
+            "jpeg_encode_seconds": 0.0,
+            "jpeg_copy_seconds": 0.0,
         }
         source_frame_ids = [int(item[0].source_frame_id) for item in pending]
         timings["render_gpu_seconds"] = sum(
@@ -949,54 +1056,37 @@ class _OmniDreamsGenerationStream:
         if self.device.type == "cuda":
             torch.cuda.synchronize(self.device)
         timings["finalize_seconds"] = time.perf_counter() - finalize_started
-        output_copy_started = time.perf_counter()
         generated = generated[0, 0, :output_count]
-        generated = ((generated.float().clamp(-1, 1) + 1) * 127.5).round()
-        generated = generated.byte()
-        gpu_jpeg = GPU_JPEG_ENCODING and generated.device.type == "cuda"
-        if gpu_jpeg:
-            generated = generated.contiguous()
-        else:
-            generated = generated.permute(0, 2, 3, 1).cpu().numpy()
-        timings["output_copy_seconds"] = time.perf_counter() - output_copy_started
-
-        pngs = (
-            [self._control_png(item[1], timings) for item in pending]
-            if RETURN_CONTROL_IMAGES
-            else [None] * len(pending)
-        )
-        jpeg_data = None
-        if gpu_jpeg:
-            jpeg_started = time.perf_counter()
-            encoded_jpegs = encode_jpeg(list(generated.unbind(0)), quality=90)
-            torch.cuda.synchronize(self.device)
-            timings["jpeg_encode_seconds"] = time.perf_counter() - jpeg_started
-            jpeg_copy_started = time.perf_counter()
-            jpeg_data = [encoded.cpu().numpy().tobytes() for encoded in encoded_jpegs]
-            timings["jpeg_copy_seconds"] = time.perf_counter() - jpeg_copy_started
-        else:
-            timings["jpeg_copy_seconds"] = 0.0
-        responses = []
-        if not gpu_jpeg:
-            jpeg_started = time.perf_counter()
-        for index, ((_, control, _), png) in enumerate(zip(pending, pngs)):
-            if gpu_jpeg:
-                encoded_data = jpeg_data[index]
-            else:
-                encoded = BytesIO()
-                Image.fromarray(generated[index], mode="RGB").save(
-                    encoded, format="JPEG", quality=90
-                )
-                encoded_data = encoded.getvalue()
-            rendered = control.response(png)
-            rendered.generated_image.CopyFrom(
-                n3bula_pb2.Image(
-                    data=encoded_data, format=n3bula_pb2.JPEG
+        if self.flashvsr_session is not None:
+            source_frames = [
+                {
+                    "run_id": self.run_id,
+                    "source_frame_id": int(frame.source_frame_id),
+                    "timestamp_us": int(frame.timestamp_us),
+                    "simulation_time_s": float(frame.simulation_time_s),
+                    "stale": bool(frame.stale),
+                    "ego_actor_id": frame.ego_actor_id,
+                    "camera_mount_id": control.camera_mount_id,
+                }
+                for frame, control, _ in pending
+            ]
+            self.flashvsr_pending.extend(zip(pending, source_frames))
+            flashvsr_started = time.perf_counter()
+            output_chunks = self.flashvsr_session.process(
+                VideoChunk(
+                    tensor=generated,
+                    layout="tchw",
+                    metadata={"n3bula_source_frames": source_frames},
                 )
             )
-            responses.append(rendered)
-        if not gpu_jpeg:
-            timings["jpeg_encode_seconds"] = time.perf_counter() - jpeg_started
+            if self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            timings["flashvsr_seconds"] = time.perf_counter() - flashvsr_started
+            self.flashvsr_seconds += timings["flashvsr_seconds"]
+            output_groups = self._flashvsr_output_groups(output_chunks)
+        else:
+            output_groups = [(generated, pending)]
+        responses = self._encode_output_groups(output_groups, timings)
 
         count = len(responses)
         self.generated_frames += count
@@ -1008,7 +1098,7 @@ class _OmniDreamsGenerationStream:
             "render_readback={:.1f}ms control_png={:.1f}ms control_png_async={:.1f}ms "
             "control_png_wait={:.1f}ms control_decode_resize={:.1f}ms "
             "control_pack={:.1f}ms control_h2d={:.1f}ms generate={:.1f}ms "
-            "scene_update={:.1f}ms finalize={:.1f}ms output_copy={:.1f}ms "
+            "scene_update={:.1f}ms finalize={:.1f}ms flashvsr={:.1f}ms output_copy={:.1f}ms "
             "jpeg={:.1f}ms jpeg_copy={:.1f}ms "
             "generated_fps={:.2f} rss_mib={:.1f} cuda_allocated_mib={:.1f} "
             "cuda_reserved_mib={:.1f} cuda_peak_allocated_mib={:.1f}",
@@ -1031,6 +1121,7 @@ class _OmniDreamsGenerationStream:
             timings["generate_seconds"] * 1000,
             timings.get("update_scene_seconds", 0.0) * 1000,
             timings["finalize_seconds"] * 1000,
+            timings["flashvsr_seconds"] * 1000,
             timings["output_copy_seconds"] * 1000,
             timings["jpeg_encode_seconds"] * 1000,
             timings["jpeg_copy_seconds"] * 1000,
@@ -1069,6 +1160,7 @@ class N3bulaLudusService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
         request_wait_seconds = 0.0
         response_yield_seconds = 0.0
         yielded_frames = 0
+        flashvsr_seconds_total = 0.0
         request_iterator = iter(request_iterator)
 
         def timed_requests():
@@ -1103,13 +1195,18 @@ class N3bulaLudusService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
                 event = request.WhichOneof("event")
                 if event == "definition":
                     if generation is not None:
-                        if generation.pending:
-                            yield from yield_responses(generation.flush())
+                        yield from yield_responses(generation.flush())
                         generated_frames += generation.generated_frames
                         generation_seconds += generation.generation_seconds
+                        flashvsr_seconds_total += generation.flashvsr_seconds
                     renderer.set_definition(request.definition)
                     config = request.definition.generation_config
-                    generation = _OmniDreamsGenerationStream(self.engine, config, renderer.image_size)
+                    generation = _OmniDreamsGenerationStream(
+                        self.engine,
+                        config,
+                        renderer.image_size,
+                        run_id=request.definition.run_id,
+                    )
                     logger.info(
                         "N3BULA stream configured: camera={}, resolution={}x{}, random_seed={}, prompt={!r}, gpu_control={}, return_control_images={}",
                         renderer.camera_mount_id,
@@ -1142,17 +1239,18 @@ class N3bulaLudusService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
                 else:
                     raise ValueError("N3BULA stream request has no event")
 
-            if generation is not None and generation.pending:
-                yield from yield_responses(generation.flush())
             if generation is not None:
+                yield from yield_responses(generation.flush())
                 generated_frames += generation.generated_frames
                 generation_seconds += generation.generation_seconds
+                flashvsr_seconds_total += generation.flashvsr_seconds
             elapsed = time.perf_counter() - stream_started
             logger.info(
                 "N3BULA stream closed: controls={}, generated={}, render_total={:.3f}s "
                 "render_gpu={:.3f}s render_readback={:.3f}s control_png={:.3f}s "
                 "request_wait={:.3f}s response_yield_blocked={:.3f}s responses_yielded={}, "
-                "generate={:.3f}s ({:.2f} generate-only fps), end-to-end={:.2f} generated fps",
+                "generate={:.3f}s ({:.2f} generate-only fps), flashvsr={:.3f}s, "
+                "end-to-end={:.2f} returned fps",
                 received_frames,
                 generated_frames,
                 control_seconds,
@@ -1165,6 +1263,7 @@ class N3bulaLudusService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
                 generation_seconds,
                 0.0 if not generation_seconds
                 else generated_frames / generation_seconds,
+                flashvsr_seconds_total,
                 0.0 if not elapsed else generated_frames / elapsed,
             )
         except ValueError as error:
