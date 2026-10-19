@@ -121,9 +121,7 @@ RUN uv sync --package flashdreams-omnidreams --extra codegen --inexact --no-dev 
     && uv pip uninstall --python "$UV_PROJECT_ENVIRONMENT/bin/python" grpcio-tools \
     && cd integrations_v2 \
     && uv run --package flashdreams-omnidreams --no-sync python -c \
-       "from omnidreams.n3bula.service import N3bulaLudusService; print('N3BULA Ludus gRPC service import OK')" \
-    && uv run --package flashdreams-omnidreams --no-sync python -c \
-       "from omnidreams.config import OMNIDREAMS_CONFIGS; from omnidreams.impl.grpc.server import RESOLUTION_MAP; assert '${FLASHDREAMS_PIPELINE_CONFIG}' in OMNIDREAMS_CONFIGS; assert '${FLASHDREAMS_RESOLUTION}' in RESOLUTION_MAP" \
+         "from omnidreams.n3bula.server import OMNIDREAMS_CONFIGS, RESOLUTION_MAP; assert '${FLASHDREAMS_PIPELINE_CONFIG}' in OMNIDREAMS_CONFIGS; assert '${FLASHDREAMS_RESOLUTION}' in RESOLUTION_MAP; print('N3BULA gRPC server import and profile check OK')" \
     && cd /opt/flashdreams \
     && mkdir -p /home/flashdreams/.cache/huggingface \
     && chown -R "${FLASHDREAMS_UID}:1000" /opt/flashdreams /home/flashdreams
