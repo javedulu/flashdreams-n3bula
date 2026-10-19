@@ -8,6 +8,8 @@ nav:
       - LingBot-World: lingbot_world.md
       - Waypoint 1.5: waypoint.md
       - SANA-WM: sana_wm_streaming.md
+  - Serving integrations:
+      - N3BULA: n3bula.md
   - Bidirectional:
       - SANA-WM: sana_wm_streaming.md
       - Wan 2.1: wan21.md

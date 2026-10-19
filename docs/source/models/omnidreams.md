@@ -63,6 +63,13 @@ uv run --no-sync flashdreams-run-v2 interactive-drive-omnidreams \
 
 <hr>
 
+## N3BULA gRPC Service
+
+For container build, deployment, and network security guidance, see the
+[dedicated N3BULA service guide](n3bula.md).
+
+<hr>
+
 ## Demo Presets
 
 <a id="crazy-robotaxi-presets"></a>

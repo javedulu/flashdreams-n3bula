@@ -107,6 +107,12 @@ Drive a world model in real time with the unified OmniDreams `local-window` or
 `webrtc` launch mode. See the
 **[interactive demo guide](https://nvidia.github.io/flashdreams/main/models/omnidreams.html#launch-the-interactive-demo)**.
 
+OmniDreams also includes a GPU-backed N3BULA gRPC service. For container build
+and run instructions, see the [N3BULA service guide](docs/source/models/n3bula.md)
+and [Docker instructions](docker/README.md#n3bula-grpc-service-image). The
+current service uses unauthenticated, unencrypted gRPC; keep it on a trusted
+network or put it behind an appropriately secured gateway.
+
 ## Supported models
 
 FlashDreams ships first-party integrations under
@@ -124,6 +130,12 @@ runner slugs, multi-GPU commands, and (where available) profiling benchmarks.
 | [Causal Wan2.2](https://nvidia.github.io/flashdreams/main/models/causal_wan22.html) | FastVideo Causal Wan 2.2 14B MoE T2V |
 | [FlashVSR](https://nvidia.github.io/flashdreams/main/models/flashvsr.html) | Streaming video super-resolution |
 | [Cosmos-Predict2.5](https://nvidia.github.io/flashdreams/main/models/cosmos_predict2.html) | Bidirectional T2V / I2V |
+
+### Serving integrations
+
+| Integration | Interface |
+| --- | --- |
+| [N3BULA](docs/source/models/n3bula.md) | OmniDreams scene generation over gRPC |
 
 See [the model gallery](https://nvidia.github.io/flashdreams/main/models/index.html) and
 [the new method guide](https://nvidia.github.io/flashdreams/main/developer_guides/new_integration.html)

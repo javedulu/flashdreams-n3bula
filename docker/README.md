@@ -153,3 +153,27 @@ The build uses the source in the current checkout directly. Set
 `FLASHDREAMS_N3BULA_DEV_IMAGE`,
 `FLASHDREAMS_PIPELINE_CONFIG`, and `FLASHDREAMS_RESOLUTION` to customize the
 development tag or the profile baked into the release image.
+
+### Run the release image
+
+The release image starts the N3BULA gRPC server on port `50051`. The NVIDIA
+Container Toolkit must be installed on the host. For a local-only endpoint:
+
+```bash
+docker run --rm --gpus all \
+	--publish 127.0.0.1:50051:50051 \
+	--mount type=volume,src=omnidreams-hf,dst=/home/flashdreams/.cache/huggingface \
+	--env HF_TOKEN \
+	omnidreams-n3bula:latest
+```
+
+Export `HF_TOKEN` before running when the selected model repository requires
+authentication. The named volume retains model downloads when the container is
+replaced. Override the baked-in pipeline and resolution at runtime with
+`FLASHDREAMS_PIPELINE_CONFIG` and `FLASHDREAMS_RESOLUTION`; available values
+are validated against the server registry. The server defaults to
+`omnidreams-perf` at `640p` and accepts `480p`, `640p`, `704p`, or `720p`.
+
+The service currently uses insecure gRPC without client authentication. Keep
+the published port on localhost or a trusted network; use an authenticated,
+encrypted gateway before allowing access from untrusted clients.
