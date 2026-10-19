@@ -19,7 +19,7 @@ dependencies = [
     "crazy-robotaxi",
     "mediapy>=1.1",
     "ludus-renderer",
-    "grpcio>=1.50",
+    "grpcio>=1.84",
     "imageio>=2.20",
     "nvidia-cudnn-frontend==1.23.0",
     # Must match the cuDNN bundled by the Windows PyTorch cu130 wheel.
@@ -58,7 +58,7 @@ applications = [
     "PyNvVideoCodec>=2.1,<3",
 ]
 codegen = [
-    "grpcio-tools>=1.50",
+    "grpcio-tools>=1.84",
 ]
 replay = [
     "imageio>=2.20",
