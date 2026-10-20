@@ -66,6 +66,12 @@ The image defaults to `omnidreams-perf` at `640p`. Set
 select a different registered config or resolution. Supported resolutions are
 `480p`, `640p`, `704p`, and `720p`. Model weights are downloaded on first use.
 
+## Optional FlashVSR upscaling
+
+The service can post-process generated frames with FlashVSR for 2x or 4x output. It is off by
+default because it is slow on a single GPU. See [N3BULA + FlashVSR](n3bula_flashvsr.md) for the
+design, side-by-side comparisons and integration learnings.
+
 ## Network security
 
 The service currently uses gRPC without TLS or client authentication. The run
