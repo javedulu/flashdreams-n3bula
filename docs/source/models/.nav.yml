@@ -10,6 +10,8 @@ nav:
       - SANA-WM: sana_wm_streaming.md
   - Serving integrations:
       - N3BULA: n3bula.md
+      - N3BULA + FlashVSR: n3bula_flashvsr.md
+      - N3BULA + SwiftVR: n3bula_swiftvr.md
   - Bidirectional:
       - SANA-WM: sana_wm_streaming.md
       - Wan 2.1: wan21.md
