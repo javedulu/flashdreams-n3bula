@@ -334,15 +334,16 @@ OMNIDREAMS_OPTIMIZED_RTX_PRO_6000_RESPONSIVE_PIPELINE_CONFIG = cast(
         name="omnidreams-optimized-rtx-pro-6000-responsive",
         diffusion_model=dict(
             transformer=dict(
-                window_size_t=4,
+                window_size_t=8,
                 native_dit_acceleration="disabled",
                 early_short_history_block_count=9,
                 network=dict(apply_rope_before_kvcache=False),
             ),
+            scheduler=dict(denoising_timesteps=[1000,400]),
         ),
     ),
 )  # ty:ignore[redundant-cast]
-"""RTX PRO 6000 attention with responsive early-block visual history."""
+"""RTX PRO 6000 responsive profile with KV window 8 and denoising [1000,400]."""
 
 
 OMNIDREAMS_CONFIGS: dict[str, OmnidreamsPipelineConfig] = {
