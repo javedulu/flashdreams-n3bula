@@ -581,6 +581,33 @@ def _load_prebuilt_extension(
     return extension
 
 
+def _load_frozen_prebuilt_extension() -> ModuleType:
+    """Load the extension prepared in an offline bundle without build sources."""
+    build_root = Path(os.environ["TORCH_EXTENSIONS_DIR"]) / "torch_extensions"
+    binaries = [
+        (directory.name, binary)
+        for directory in build_root.glob("omnidreams_singleview_native_sage3_*")
+        for suffix in importlib.machinery.EXTENSION_SUFFIXES
+        if (binary := directory / f"{directory.name}{suffix}").is_file()
+    ]
+    # ponytail: One native variant per bundle; add an explicit manifest if bundles
+    # must support multiple precompiled CUDA architectures.
+    if len(binaries) != 1:
+        raise NativeSourcesUnavailable(
+            f"Expected one prebuilt OmniDreams extension in {build_root}, "
+            f"found {len(binaries)}."
+        )
+    name, binary = binaries[0]
+    _add_windows_cuda_dll_directories(_python_package_dir("nvidia.cudnn"))
+    spec = importlib.util.spec_from_file_location(name, binary)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load prebuilt OmniDreams extension from {binary}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    sys.modules[name] = module
+    return module
+
+
 def load_extension(
     build_root: Path | str | None = None,
     *,
@@ -608,6 +635,9 @@ def load_extension(
         _extension_load_error = None
 
         try:
+            if getattr(sys, "frozen", False):
+                _extension[extension_key] = _load_frozen_prebuilt_extension()
+                return _extension[extension_key]
             _ensure_windows_cuda13_toolkit()
 
             try:
@@ -689,10 +719,17 @@ def load_extension(
                         *([] if cudnn_include is None else [str(cudnn_include)]),
                     ],
                     extra_cflags=[
-                        # Assume MSVC for Windows
-                        *(["/Zc:preprocessor"] if os.name == "nt" else []),
-                        "-O3",
-                        "-std=c++20",
+                        # MSVC flags; lean Windows headers avoid RPC's `small` macro.
+                        *(
+                            [
+                                "/Zc:preprocessor",
+                                "/O2",
+                                "/std:c++20",
+                                "-DWIN32_LEAN_AND_MEAN",
+                            ]
+                            if os.name == "nt"
+                            else ["-O3", "-std=c++20"]
+                        ),
                         "-DOMNIDREAMS_SINGLEVIEW_WITH_CUDA",
                         "-DOMNIDREAMS_SINGLEVIEW_USE_CUTLASS",
                         f"-DOMNIDREAMS_SINGLEVIEW_HAS_SAGE3={has_sage3}",
@@ -718,7 +755,11 @@ def load_extension(
                     ],
                     extra_cuda_cflags=[
                         # Assume MSVC for Windows
-                        *(["-Xcompiler=/Zc:preprocessor"] if os.name == "nt" else []),
+                        *(
+                            ["-Xcompiler=/Zc:preprocessor", "-DWIN32_LEAN_AND_MEAN"]
+                            if os.name == "nt"
+                            else []
+                        ),
                         "-O3",
                         "-std=c++20",
                         "--expt-relaxed-constexpr",
