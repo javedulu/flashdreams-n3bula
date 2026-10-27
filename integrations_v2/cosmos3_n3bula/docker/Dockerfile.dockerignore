@@ -1,0 +1,15 @@
+.git
+**/.git
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/build
+**/artifacts
+docs
+assets
+# Native (non-Docker) server state on the GPU host; see __pys__/start_cosmos3_n3bula_native.sh.
+.venv-native
+.native-artifacts
+runs
+.sumo-sync-*

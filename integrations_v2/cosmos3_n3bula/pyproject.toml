@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flashdreams-cosmos3-n3bula"
+version = "0.1.0"
+description = "N3BULA gRPC scene streaming served by Cosmos3 Nano Sim Auto."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+    "flashdreams-cosmos3-nano-sim-auto",
+    "ludus-renderer",
+    "grpcio>=1.84",
+    "protobuf>=7.35",
+    "numpy>=1.26",
+    "scipy>=1.15.3",
+    "Pillow>=12.3.0",
+    "torchvision>=0.26",
+    "loguru",
+]
+
+[project.optional-dependencies]
+codegen = ["grpcio-tools==1.84.0"]
+
+[project.scripts]
+cosmos3-n3bula-server = "cosmos3_n3bula.server:main"
+
+[tool.uv.sources]
+flashdreams-cosmos3-nano-sim-auto = { workspace = true }
+ludus-renderer = { workspace = true }
+
+[tool.setuptools]
+include-package-data = false
+# This directory is the package; subpackages must be listed or they ship missing.
+packages = [
+    "cosmos3_n3bula",
+    "cosmos3_n3bula.proto",
+    "cosmos3_n3bula.scene",
+    "cosmos3_n3bula.stream",
+]
+
+[tool.setuptools.package-dir]
+cosmos3_n3bula = "."
+
+[tool.uv]
+managed = true

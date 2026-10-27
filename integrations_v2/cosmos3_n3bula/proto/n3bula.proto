@@ -1,0 +1,489 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 Javed Shaik
+// SPDX-License-Identifier: Apache-2.0
+//
+// Wire-compatible with omnidreams/n3bula/n3bula.proto: the package, service and
+// every existing field number are unchanged. Cosmos3 additions are marked
+// "Additive" and only ever use new field numbers.
+syntax = "proto3";
+
+package omnidreams.n3bula;
+
+enum ShutterType {
+    UNKNOWN = 0;
+    ROLLING_TOP_TO_BOTTOM = 1;
+    ROLLING_LEFT_TO_RIGHT = 2;
+    ROLLING_BOTTOM_TO_TOP = 3;
+    ROLLING_RIGHT_TO_LEFT = 4;
+    GLOBAL = 5;
+}
+
+message LinearCde {
+    double linear_c = 1;
+    double linear_d = 2;
+    double linear_e = 3;
+}
+
+message FthetaCameraParam {
+    enum PolynomialType {
+        UNKNOWN = 0;
+        PIXELDIST_TO_ANGLE = 1;
+        ANGLE_TO_PIXELDIST = 2;
+    }
+
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    PolynomialType reference_poly = 3;
+    repeated double pixeldist_to_angle_poly = 4;
+    repeated double angle_to_pixeldist_poly = 5;
+    double max_angle = 6;
+    LinearCde linear_cde = 7;
+}
+
+message OpenCVPinholeCameraParam {
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    double focal_length_x = 3;
+    double focal_length_y = 4;
+    repeated double radial_coeffs = 5;
+    repeated double tangential_coeffs = 6;
+    repeated double thin_prism_coeffs = 7;
+}
+
+message OpenCVFisheyeCameraParam {
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+    double focal_length_x = 3;
+    double focal_length_y = 4;
+    repeated double radial_coeffs = 5;
+    double max_angle = 6;
+}
+
+message BivariateWindshieldModelParameters {
+    enum ReferencePolynomial {
+        FORWARD = 0;
+        BACKWARD = 1;
+    }
+
+    ReferencePolynomial reference_poly = 1;
+    repeated double horizontal_poly = 2;
+    repeated double vertical_poly = 3;
+    repeated double horizontal_poly_inverse = 4;
+    repeated double vertical_poly_inverse = 5;
+}
+
+message CameraSpec {
+    oneof camera_param {
+        FthetaCameraParam ftheta_param = 2;
+        OpenCVPinholeCameraParam opencv_pinhole_param = 3;
+        OpenCVFisheyeCameraParam opencv_fisheye_param = 4;
+    }
+
+    string logical_id = 5;
+    uint32 resolution_h = 7;
+    uint32 resolution_w = 8;
+    ShutterType shutter_type = 9;
+
+    oneof external_distortion {
+        BivariateWindshieldModelParameters bivariate_windshield_model_param = 10;
+    }
+}
+
+enum ImageFormat {
+    UNDEFINED = 0;
+    PNG = 1;
+    JPEG = 2;
+    JPEG2000 = 3;
+    RGB_UINT8_PLANAR = 4;
+    AVC = 5;
+    AV1 = 6;
+}
+
+message Image {
+    bytes data = 1;
+    ImageFormat format = 2;
+}
+
+// World-space values are doubles so georeferenced coordinates and camera
+// calibration survive the SUMO-to-Ludus boundary without float truncation.
+message Vec3d {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+message Euler3d {
+    // Rz * Ry * Rx; positive pitch is nose-down in the SUMO scene convention.
+    double yaw_rad = 1;
+    double pitch_rad = 2;
+    double roll_rad = 3;
+}
+
+// Numeric values match cosmos::SemanticId and are stable on the wire.
+enum SemanticId {
+    SEMANTIC_ID_VOID = 0;
+    SEMANTIC_ID_LANE_MARKING = 1;
+    SEMANTIC_ID_ROAD_BOUNDARY = 2;
+    SEMANTIC_ID_CROSSWALK = 3;
+    SEMANTIC_ID_STOP_LINE = 4;
+    SEMANTIC_ID_TRAFFIC_SIGN = 5;
+    SEMANTIC_ID_TRAFFIC_LIGHT = 6;
+    SEMANTIC_ID_POLE = 7;
+    SEMANTIC_ID_ACTOR = 8;
+    SEMANTIC_ID_EGO = 9;
+    SEMANTIC_ID_ROAD_SURFACE = 10;
+    SEMANTIC_ID_SHOULDER = 11;
+    SEMANTIC_ID_SIDEWALK = 12;
+    SEMANTIC_ID_CURB = 13;
+    SEMANTIC_ID_PARKING = 14;
+    SEMANTIC_ID_BIKE_LANE = 15;
+    SEMANTIC_ID_TERRAIN = 16;
+    SEMANTIC_ID_SPEED_SIGN = 17;
+}
+
+enum MarkColorId {
+    MARK_COLOR_ID_WHITE = 0;
+    MARK_COLOR_ID_YELLOW = 1;
+    MARK_COLOR_ID_ORANGE = 2;
+    MARK_COLOR_ID_BLUE = 3;
+    MARK_COLOR_ID_GREEN = 4;
+    MARK_COLOR_ID_RED = 5;
+    MARK_COLOR_ID_VIOLET = 6;
+    MARK_COLOR_ID_BLACK = 7;
+    MARK_COLOR_ID_UNRESOLVED = 8;
+}
+
+enum MarkTypeId {
+    MARK_TYPE_ID_UNDECIDED = 0;
+    MARK_TYPE_ID_SOLID = 1;
+    MARK_TYPE_ID_BROKEN = 2;
+    MARK_TYPE_ID_SOLID_SOLID = 3;
+    MARK_TYPE_ID_SOLID_BROKEN = 4;
+    MARK_TYPE_ID_BROKEN_SOLID = 5;
+    MARK_TYPE_ID_BROKEN_BROKEN = 6;
+    MARK_TYPE_ID_BOTTS_DOTS = 7;
+}
+
+enum ActorCategory {
+    ACTOR_CATEGORY_CAR = 0;
+    ACTOR_CATEGORY_TRUCK = 1;
+    ACTOR_CATEGORY_PEDESTRIAN = 2;
+    ACTOR_CATEGORY_CYCLIST = 3;
+    ACTOR_CATEGORY_OTHER = 4;
+    ACTOR_CATEGORY_EGO = 5;
+}
+
+enum Wsm4SignClass {
+    WSM4_SIGN_CLASS_UNSPECIFIED = 0;
+    WSM4_SIGN_CLASS_STOP = 1;
+    WSM4_SIGN_CLASS_YIELD = 2;
+    WSM4_SIGN_CLASS_DO_NOT_ENTER = 3;
+    WSM4_SIGN_CLASS_ONE_WAY = 4;
+    WSM4_SIGN_CLASS_ONE_WAY_LEFT = 5;
+    WSM4_SIGN_CLASS_ONE_WAY_RIGHT = 6;
+    WSM4_SIGN_CLASS_PEDESTRIAN_CROSSING = 7;
+    WSM4_SIGN_CLASS_SPEED_LIMIT = 8;
+}
+
+enum Wsm4TrafficSignalState {
+    WSM4_SIGNAL_STATE_UNSPECIFIED = 0;
+    WSM4_SIGNAL_STATE_UNKNOWN = 1;
+    WSM4_SIGNAL_STATE_STATELESS = 2;
+    WSM4_SIGNAL_STATE_RED = 3;
+    WSM4_SIGNAL_STATE_YELLOW = 4;
+    WSM4_SIGNAL_STATE_GREEN = 5;
+    WSM4_SIGNAL_STATE_RED_YELLOW = 6;
+    WSM4_SIGNAL_STATE_WHITE_VRU = 7;
+}
+
+enum Wsm4TrafficSignalDirection {
+    WSM4_SIGNAL_DIRECTION_NONE = 0;
+    WSM4_SIGNAL_DIRECTION_LEFT = 1;
+    WSM4_SIGNAL_DIRECTION_UP = 2;
+    WSM4_SIGNAL_DIRECTION_RIGHT = 3;
+}
+
+enum Wsm4TrafficSignalUser {
+    WSM4_SIGNAL_USER_VEHICLE = 0;
+    WSM4_SIGNAL_USER_PEDESTRIAN = 1;
+    WSM4_SIGNAL_USER_CYCLIST = 2;
+}
+
+enum Wsm4RoadMarkingType {
+    WSM4_ROAD_MARKING_UNSPECIFIED = 0;
+    WSM4_ROAD_MARKING_FORWARD = 1;
+    WSM4_ROAD_MARKING_LEFT = 2;
+    WSM4_ROAD_MARKING_RIGHT = 3;
+    WSM4_ROAD_MARKING_LEFT_FORWARD = 4;
+    WSM4_ROAD_MARKING_RIGHT_FORWARD = 5;
+    WSM4_ROAD_MARKING_MERGE_LEFT = 6;
+    WSM4_ROAD_MARKING_MERGE_RIGHT = 7;
+    WSM4_ROAD_MARKING_STOP = 8;
+    WSM4_ROAD_MARKING_KEEP_CLEAR = 9;
+    WSM4_ROAD_MARKING_TEXT_PAINT = 10;
+    WSM4_ROAD_MARKING_OTHER = 11;
+}
+
+enum Wsm4RoadBoundaryType {
+    WSM4_BOUNDARY_UNSPECIFIED = 0;
+    WSM4_BOUNDARY_BARRIER = 1;
+    WSM4_BOUNDARY_FENCE = 2;
+    WSM4_BOUNDARY_CURB = 3;
+    WSM4_BOUNDARY_LOW_CURB = 4;
+    WSM4_BOUNDARY_TALL_CURB = 5;
+    WSM4_BOUNDARY_ROAD_BOUNDARY = 6;
+    WSM4_BOUNDARY_OBSTACLE_BARS = 7;
+    WSM4_BOUNDARY_WALL = 8;
+    WSM4_BOUNDARY_OTHER = 9;
+}
+
+enum CameraRole {
+    CAMERA_ROLE_GROUND_TRUTH = 0;
+    CAMERA_ROLE_CONDITIONING = 1;
+}
+
+enum LineWidthMode {
+    LINE_WIDTH_MODE_WORLD_METRES = 0;
+    LINE_WIDTH_MODE_SCREEN_PIXELS = 1;
+}
+
+message Camera {
+    string mount_id = 1;
+    CameraSpec spec = 2;
+    Vec3d position_bs_m = 3; // Camera origin in the body frame, metres.
+    Euler3d rotation_bs = 4;
+    CameraRole role = 5;
+    LineWidthMode line_width_mode = 6;
+    double near_m = 7;
+    double far_m = 8;
+    double rate_hz = 9;
+    repeated double distortion = 10;
+    string calibration_source = 11;
+    uint64 calibration_hash = 12;
+}
+
+message Strip {
+    repeated Vec3d centre_world_m = 1;
+    double width = 2; // Metres or pixels according to Camera.line_width_mode.
+    SemanticId semantic = 3;
+    MarkColorId colour = 4;
+    MarkTypeId pattern = 5;
+    uint32 instance_id = 6;
+    Wsm4RoadBoundaryType wsm4_boundary_type = 7;
+}
+
+message SurfaceBand {
+    repeated Vec3d left_world_m = 1;
+    repeated Vec3d right_world_m = 2;
+    SemanticId semantic = 3;
+    uint32 instance_id = 4;
+    Wsm4RoadMarkingType wsm4_marking_type = 5;
+}
+
+message Box {
+    Vec3d centre_world_m = 1;
+    Euler3d rotation_world = 2;
+    double length_m = 3;
+    double width_m = 4;
+    double height_m = 5;
+    SemanticId semantic = 6;
+    ActorCategory category = 7;
+    uint32 instance_id = 8;
+    bool gradient_along_local_x = 9;
+    bool wireframe_overlay = 10;
+    Wsm4SignClass wsm4_sign_class = 11;
+    Wsm4TrafficSignalState wsm4_signal_state = 12;
+    Wsm4TrafficSignalDirection wsm4_signal_direction = 13;
+    Wsm4TrafficSignalUser wsm4_signal_user = 14;
+}
+
+message MeshInstance {
+    string asset_path = 1;
+    Vec3d origin_world_m = 2;
+    double yaw_rad = 3;
+    SemanticId semantic = 4;
+    uint32 instance_id = 5;
+    Wsm4SignClass wsm4_sign_class = 6;
+    Wsm4TrafficSignalState wsm4_signal_state = 7;
+    Wsm4TrafficSignalDirection wsm4_signal_direction = 8;
+    Wsm4TrafficSignalUser wsm4_signal_user = 9;
+}
+
+message GenerationConfig {
+    string prompt = 1;
+    // Opening frame of a single-camera rig; multi-camera rigs use camera_seed_images.
+    Image seed_image = 2;
+    fixed64 random_seed = 3;
+    // Additive: opening frame per camera, keyed by Camera.mount_id. All or none.
+    map<string, Image> camera_seed_images = 4;
+    // Additive: also generate LiDAR sweeps (joint RGB+LiDAR checkpoint, needs seeds).
+    bool enable_lidar = 5;
+    // Additive: what each sweep carries; unset means LIDAR_PAYLOAD_POINT_CLOUD in the sensor frame.
+    LidarOutput lidar_output = 6;
+}
+
+message SceneDefinition {
+    string run_id = 1;
+    uint64 configuration_revision = 2;
+    repeated Camera cameras = 3;
+    repeated string camera_errors = 4;
+    repeated Strip static_strips = 5;
+    repeated SurfaceBand static_surface_bands = 6;
+    Vec3d origin_world_m = 7;
+    GenerationConfig generation_config = 8;
+    // Additive: LiDAR mounts. The server reports the calibration it actually
+    // used in the first LidarFrame of each mount.
+    repeated Lidar lidars = 9;
+}
+
+message SceneFrame {
+    uint64 source_frame_id = 1;
+    uint64 timestamp_us = 2;
+    double simulation_time_s = 3;
+    bool stale = 4;
+    string ego_actor_id = 5;
+    Vec3d ego_position_world_m = 6;
+    Euler3d ego_rotation_world = 7;
+    string camera_mount_id = 8;
+    repeated SurfaceBand surface_bands = 9;
+    repeated Strip strips = 10;
+    repeated Box boxes = 11;
+    repeated MeshInstance meshes = 12;
+    uint64 palette_hash = 13;
+    string palette_version = 14;
+}
+
+message SceneBatch {
+    uint32 schema_version = 1; // Current schema is 1.
+    SceneDefinition definition = 2;
+    repeated SceneFrame frames = 3;
+}
+
+message SceneStreamRequest {
+    uint32 schema_version = 1;
+    oneof event {
+        SceneDefinition definition = 2;
+        SceneFrame frame = 3;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Additive LiDAR transport.
+//
+// Conventions for every LiDAR message below:
+// * Units are metres, seconds as integer microseconds, radians.
+// * Axes are right-handed FLU (x forward, y left, z up) in the sensor, body
+//   and world frames alike; world is offset by SceneDefinition.origin_world_m
+//   exactly as SceneFrame poses are.
+// * Packed `bytes` arrays are little-endian, C-contiguous, with the dtype and
+//   shape given beside the field; an empty field means "not sent".
+// ---------------------------------------------------------------------------
+
+message Pose3d {
+    Vec3d position_m = 1;
+    Euler3d rotation = 2; // Same Rz * Ry * Rx convention as Euler3d.
+}
+
+enum LidarCoordinateFrame {
+    LIDAR_COORDINATE_FRAME_SENSOR = 0; // At the sweep's own firing pose per point.
+    LIDAR_COORDINATE_FRAME_BODY = 1; // Ego body frame at LidarFrame.timestamp_us.
+    LIDAR_COORDINATE_FRAME_WORLD = 2; // Motion-compensated into the scene world frame.
+}
+
+enum LidarSource {
+    LIDAR_SOURCE_GENERATED = 0; // Decoded from the world model.
+    LIDAR_SOURCE_CONTROL = 1; // HD-map conditioning sweep the model was fed.
+}
+
+enum LidarPayload {
+    LIDAR_PAYLOAD_POINT_CLOUD = 0;
+    LIDAR_PAYLOAD_RANGE_IMAGE = 1;
+    LIDAR_PAYLOAD_BOTH = 2;
+}
+
+message LidarOutput {
+    LidarPayload payload = 1;
+    LidarCoordinateFrame frame = 2; // Point-cloud frame; range images are always sensor-frame.
+    bool include_control = 3; // Also stream the LIDAR_SOURCE_CONTROL sweeps.
+    bool include_invalid = 4; // Keep no-return cells in point clouds (range 0, valid 0).
+}
+
+// A spinning LiDAR mount. Intrinsics are optional on the request: the joint
+// checkpoint has a fixed beam layout and the server echoes the one it used.
+message Lidar {
+    string mount_id = 1;
+    Pose3d sensor_to_body = 2; // Mount pose in the body frame.
+    uint32 rows = 3; // Beams (ring count).
+    uint32 columns = 4; // Azimuth bins per revolution.
+    double rate_hz = 5; // Revolutions per second; a sweep is 1/rate_hz long.
+    double min_range_m = 6;
+    double max_range_m = 7;
+    // float32 [rows, columns, 3] unit ray directions in the sensor frame.
+    bytes ray_directions = 8;
+    string calibration_source = 9;
+    uint64 calibration_hash = 10;
+}
+
+// Organised sweep, row = beam (ring), column = azimuth bin.
+message LidarRangeImage {
+    uint32 rows = 1;
+    uint32 columns = 2;
+    bytes range_m = 3; // float32 [rows, columns]; 0 where invalid.
+    bytes intensity = 4; // float32 [rows, columns] in [0, 1].
+    bytes valid = 5; // uint8 [rows, columns]; 1 where a return exists.
+}
+
+// Unorganised points; every non-empty column has the same length N.
+message LidarPointCloud {
+    uint32 point_count = 1; // N.
+    LidarCoordinateFrame frame = 2;
+    bytes positions_m = 3; // float32 [N, 3] xyz.
+    bytes intensity = 4; // float32 [N] in [0, 1].
+    bytes range_m = 5; // float32 [N] distance from the sensor at firing time.
+    bytes ring = 6; // uint16 [N] beam row in the range image.
+    bytes column = 7; // uint16 [N] azimuth column in the range image.
+    bytes time_offset_us = 8; // int32 [N] firing time minus LidarFrame.timestamp_us (<= 0).
+    bytes valid = 9; // uint8 [N]; only sent with LidarOutput.include_invalid.
+    // uint8 [N] SemanticId of the map element hit; control sweeps only,
+    // generated sweeps carry no labels and leave this empty.
+    bytes semantic = 10;
+    bytes instance_id = 11; // uint32 [N] Box/Strip instance_id; control sweeps only.
+}
+
+// One completed sweep. Sweep k ends at k / rate_hz after the stream's first
+// frame and covers (timestamp_us - 1e6 / rate_hz, timestamp_us]; sweep 0 is an
+// instantaneous opening scan.
+message LidarFrame {
+    string lidar_mount_id = 1;
+    LidarSource source = 2;
+    uint32 sweep_index = 3;
+    uint64 source_frame_id = 4; // SceneFrame the sweep completes at.
+    uint64 timestamp_us = 5; // Sweep end, on the SceneFrame clock.
+    uint64 sweep_start_us = 6;
+    // Sensor poses at sweep start and end; points fired in between are
+    // interpolated between them (rolling shutter).
+    Pose3d sensor_to_world_start = 7;
+    Pose3d sensor_to_world_end = 8;
+    LidarRangeImage range_image = 9;
+    LidarPointCloud point_cloud = 10;
+    Lidar calibration = 11; // Effective calibration; first sweep of each mount only.
+}
+
+message RenderedControlFrame {
+    string camera_mount_id = 1;
+    uint64 source_frame_id = 2;
+    uint64 timestamp_us = 3;
+    Image image = 4;
+    string ego_actor_id = 5;
+    Image generated_image = 6;
+    // Additive: sweeps completing at this frame, on its first camera's response only.
+    repeated LidarFrame lidar = 7;
+}
+
+message RenderedControls {
+    repeated RenderedControlFrame frames = 1;
+}
+
+service N3bulaLudusService {
+    rpc render_controls(SceneBatch) returns (RenderedControls);
+    rpc stream_scenes(stream SceneStreamRequest) returns (stream RenderedControlFrame);
+}

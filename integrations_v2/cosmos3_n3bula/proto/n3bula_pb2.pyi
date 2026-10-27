@@ -1,0 +1,766 @@
+from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from collections.abc import Iterable as _Iterable, Mapping as _Mapping
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class ShutterType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    UNKNOWN: _ClassVar[ShutterType]
+    ROLLING_TOP_TO_BOTTOM: _ClassVar[ShutterType]
+    ROLLING_LEFT_TO_RIGHT: _ClassVar[ShutterType]
+    ROLLING_BOTTOM_TO_TOP: _ClassVar[ShutterType]
+    ROLLING_RIGHT_TO_LEFT: _ClassVar[ShutterType]
+    GLOBAL: _ClassVar[ShutterType]
+
+class ImageFormat(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    UNDEFINED: _ClassVar[ImageFormat]
+    PNG: _ClassVar[ImageFormat]
+    JPEG: _ClassVar[ImageFormat]
+    JPEG2000: _ClassVar[ImageFormat]
+    RGB_UINT8_PLANAR: _ClassVar[ImageFormat]
+    AVC: _ClassVar[ImageFormat]
+    AV1: _ClassVar[ImageFormat]
+
+class SemanticId(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    SEMANTIC_ID_VOID: _ClassVar[SemanticId]
+    SEMANTIC_ID_LANE_MARKING: _ClassVar[SemanticId]
+    SEMANTIC_ID_ROAD_BOUNDARY: _ClassVar[SemanticId]
+    SEMANTIC_ID_CROSSWALK: _ClassVar[SemanticId]
+    SEMANTIC_ID_STOP_LINE: _ClassVar[SemanticId]
+    SEMANTIC_ID_TRAFFIC_SIGN: _ClassVar[SemanticId]
+    SEMANTIC_ID_TRAFFIC_LIGHT: _ClassVar[SemanticId]
+    SEMANTIC_ID_POLE: _ClassVar[SemanticId]
+    SEMANTIC_ID_ACTOR: _ClassVar[SemanticId]
+    SEMANTIC_ID_EGO: _ClassVar[SemanticId]
+    SEMANTIC_ID_ROAD_SURFACE: _ClassVar[SemanticId]
+    SEMANTIC_ID_SHOULDER: _ClassVar[SemanticId]
+    SEMANTIC_ID_SIDEWALK: _ClassVar[SemanticId]
+    SEMANTIC_ID_CURB: _ClassVar[SemanticId]
+    SEMANTIC_ID_PARKING: _ClassVar[SemanticId]
+    SEMANTIC_ID_BIKE_LANE: _ClassVar[SemanticId]
+    SEMANTIC_ID_TERRAIN: _ClassVar[SemanticId]
+    SEMANTIC_ID_SPEED_SIGN: _ClassVar[SemanticId]
+
+class MarkColorId(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MARK_COLOR_ID_WHITE: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_YELLOW: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_ORANGE: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_BLUE: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_GREEN: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_RED: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_VIOLET: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_BLACK: _ClassVar[MarkColorId]
+    MARK_COLOR_ID_UNRESOLVED: _ClassVar[MarkColorId]
+
+class MarkTypeId(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MARK_TYPE_ID_UNDECIDED: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_SOLID: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_BROKEN: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_SOLID_SOLID: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_SOLID_BROKEN: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_BROKEN_SOLID: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_BROKEN_BROKEN: _ClassVar[MarkTypeId]
+    MARK_TYPE_ID_BOTTS_DOTS: _ClassVar[MarkTypeId]
+
+class ActorCategory(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    ACTOR_CATEGORY_CAR: _ClassVar[ActorCategory]
+    ACTOR_CATEGORY_TRUCK: _ClassVar[ActorCategory]
+    ACTOR_CATEGORY_PEDESTRIAN: _ClassVar[ActorCategory]
+    ACTOR_CATEGORY_CYCLIST: _ClassVar[ActorCategory]
+    ACTOR_CATEGORY_OTHER: _ClassVar[ActorCategory]
+    ACTOR_CATEGORY_EGO: _ClassVar[ActorCategory]
+
+class Wsm4SignClass(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_SIGN_CLASS_UNSPECIFIED: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_STOP: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_YIELD: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_DO_NOT_ENTER: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_ONE_WAY: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_ONE_WAY_LEFT: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_ONE_WAY_RIGHT: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_PEDESTRIAN_CROSSING: _ClassVar[Wsm4SignClass]
+    WSM4_SIGN_CLASS_SPEED_LIMIT: _ClassVar[Wsm4SignClass]
+
+class Wsm4TrafficSignalState(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_SIGNAL_STATE_UNSPECIFIED: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_UNKNOWN: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_STATELESS: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_RED: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_YELLOW: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_GREEN: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_RED_YELLOW: _ClassVar[Wsm4TrafficSignalState]
+    WSM4_SIGNAL_STATE_WHITE_VRU: _ClassVar[Wsm4TrafficSignalState]
+
+class Wsm4TrafficSignalDirection(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_SIGNAL_DIRECTION_NONE: _ClassVar[Wsm4TrafficSignalDirection]
+    WSM4_SIGNAL_DIRECTION_LEFT: _ClassVar[Wsm4TrafficSignalDirection]
+    WSM4_SIGNAL_DIRECTION_UP: _ClassVar[Wsm4TrafficSignalDirection]
+    WSM4_SIGNAL_DIRECTION_RIGHT: _ClassVar[Wsm4TrafficSignalDirection]
+
+class Wsm4TrafficSignalUser(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_SIGNAL_USER_VEHICLE: _ClassVar[Wsm4TrafficSignalUser]
+    WSM4_SIGNAL_USER_PEDESTRIAN: _ClassVar[Wsm4TrafficSignalUser]
+    WSM4_SIGNAL_USER_CYCLIST: _ClassVar[Wsm4TrafficSignalUser]
+
+class Wsm4RoadMarkingType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_ROAD_MARKING_UNSPECIFIED: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_FORWARD: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_LEFT: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_RIGHT: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_LEFT_FORWARD: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_RIGHT_FORWARD: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_MERGE_LEFT: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_MERGE_RIGHT: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_STOP: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_KEEP_CLEAR: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_TEXT_PAINT: _ClassVar[Wsm4RoadMarkingType]
+    WSM4_ROAD_MARKING_OTHER: _ClassVar[Wsm4RoadMarkingType]
+
+class Wsm4RoadBoundaryType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    WSM4_BOUNDARY_UNSPECIFIED: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_BARRIER: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_FENCE: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_CURB: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_LOW_CURB: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_TALL_CURB: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_ROAD_BOUNDARY: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_OBSTACLE_BARS: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_WALL: _ClassVar[Wsm4RoadBoundaryType]
+    WSM4_BOUNDARY_OTHER: _ClassVar[Wsm4RoadBoundaryType]
+
+class CameraRole(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CAMERA_ROLE_GROUND_TRUTH: _ClassVar[CameraRole]
+    CAMERA_ROLE_CONDITIONING: _ClassVar[CameraRole]
+
+class LineWidthMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LINE_WIDTH_MODE_WORLD_METRES: _ClassVar[LineWidthMode]
+    LINE_WIDTH_MODE_SCREEN_PIXELS: _ClassVar[LineWidthMode]
+
+class LidarCoordinateFrame(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIDAR_COORDINATE_FRAME_SENSOR: _ClassVar[LidarCoordinateFrame]
+    LIDAR_COORDINATE_FRAME_BODY: _ClassVar[LidarCoordinateFrame]
+    LIDAR_COORDINATE_FRAME_WORLD: _ClassVar[LidarCoordinateFrame]
+
+class LidarSource(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIDAR_SOURCE_GENERATED: _ClassVar[LidarSource]
+    LIDAR_SOURCE_CONTROL: _ClassVar[LidarSource]
+
+class LidarPayload(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    LIDAR_PAYLOAD_POINT_CLOUD: _ClassVar[LidarPayload]
+    LIDAR_PAYLOAD_RANGE_IMAGE: _ClassVar[LidarPayload]
+    LIDAR_PAYLOAD_BOTH: _ClassVar[LidarPayload]
+UNKNOWN: ShutterType
+ROLLING_TOP_TO_BOTTOM: ShutterType
+ROLLING_LEFT_TO_RIGHT: ShutterType
+ROLLING_BOTTOM_TO_TOP: ShutterType
+ROLLING_RIGHT_TO_LEFT: ShutterType
+GLOBAL: ShutterType
+UNDEFINED: ImageFormat
+PNG: ImageFormat
+JPEG: ImageFormat
+JPEG2000: ImageFormat
+RGB_UINT8_PLANAR: ImageFormat
+AVC: ImageFormat
+AV1: ImageFormat
+SEMANTIC_ID_VOID: SemanticId
+SEMANTIC_ID_LANE_MARKING: SemanticId
+SEMANTIC_ID_ROAD_BOUNDARY: SemanticId
+SEMANTIC_ID_CROSSWALK: SemanticId
+SEMANTIC_ID_STOP_LINE: SemanticId
+SEMANTIC_ID_TRAFFIC_SIGN: SemanticId
+SEMANTIC_ID_TRAFFIC_LIGHT: SemanticId
+SEMANTIC_ID_POLE: SemanticId
+SEMANTIC_ID_ACTOR: SemanticId
+SEMANTIC_ID_EGO: SemanticId
+SEMANTIC_ID_ROAD_SURFACE: SemanticId
+SEMANTIC_ID_SHOULDER: SemanticId
+SEMANTIC_ID_SIDEWALK: SemanticId
+SEMANTIC_ID_CURB: SemanticId
+SEMANTIC_ID_PARKING: SemanticId
+SEMANTIC_ID_BIKE_LANE: SemanticId
+SEMANTIC_ID_TERRAIN: SemanticId
+SEMANTIC_ID_SPEED_SIGN: SemanticId
+MARK_COLOR_ID_WHITE: MarkColorId
+MARK_COLOR_ID_YELLOW: MarkColorId
+MARK_COLOR_ID_ORANGE: MarkColorId
+MARK_COLOR_ID_BLUE: MarkColorId
+MARK_COLOR_ID_GREEN: MarkColorId
+MARK_COLOR_ID_RED: MarkColorId
+MARK_COLOR_ID_VIOLET: MarkColorId
+MARK_COLOR_ID_BLACK: MarkColorId
+MARK_COLOR_ID_UNRESOLVED: MarkColorId
+MARK_TYPE_ID_UNDECIDED: MarkTypeId
+MARK_TYPE_ID_SOLID: MarkTypeId
+MARK_TYPE_ID_BROKEN: MarkTypeId
+MARK_TYPE_ID_SOLID_SOLID: MarkTypeId
+MARK_TYPE_ID_SOLID_BROKEN: MarkTypeId
+MARK_TYPE_ID_BROKEN_SOLID: MarkTypeId
+MARK_TYPE_ID_BROKEN_BROKEN: MarkTypeId
+MARK_TYPE_ID_BOTTS_DOTS: MarkTypeId
+ACTOR_CATEGORY_CAR: ActorCategory
+ACTOR_CATEGORY_TRUCK: ActorCategory
+ACTOR_CATEGORY_PEDESTRIAN: ActorCategory
+ACTOR_CATEGORY_CYCLIST: ActorCategory
+ACTOR_CATEGORY_OTHER: ActorCategory
+ACTOR_CATEGORY_EGO: ActorCategory
+WSM4_SIGN_CLASS_UNSPECIFIED: Wsm4SignClass
+WSM4_SIGN_CLASS_STOP: Wsm4SignClass
+WSM4_SIGN_CLASS_YIELD: Wsm4SignClass
+WSM4_SIGN_CLASS_DO_NOT_ENTER: Wsm4SignClass
+WSM4_SIGN_CLASS_ONE_WAY: Wsm4SignClass
+WSM4_SIGN_CLASS_ONE_WAY_LEFT: Wsm4SignClass
+WSM4_SIGN_CLASS_ONE_WAY_RIGHT: Wsm4SignClass
+WSM4_SIGN_CLASS_PEDESTRIAN_CROSSING: Wsm4SignClass
+WSM4_SIGN_CLASS_SPEED_LIMIT: Wsm4SignClass
+WSM4_SIGNAL_STATE_UNSPECIFIED: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_UNKNOWN: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_STATELESS: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_RED: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_YELLOW: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_GREEN: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_RED_YELLOW: Wsm4TrafficSignalState
+WSM4_SIGNAL_STATE_WHITE_VRU: Wsm4TrafficSignalState
+WSM4_SIGNAL_DIRECTION_NONE: Wsm4TrafficSignalDirection
+WSM4_SIGNAL_DIRECTION_LEFT: Wsm4TrafficSignalDirection
+WSM4_SIGNAL_DIRECTION_UP: Wsm4TrafficSignalDirection
+WSM4_SIGNAL_DIRECTION_RIGHT: Wsm4TrafficSignalDirection
+WSM4_SIGNAL_USER_VEHICLE: Wsm4TrafficSignalUser
+WSM4_SIGNAL_USER_PEDESTRIAN: Wsm4TrafficSignalUser
+WSM4_SIGNAL_USER_CYCLIST: Wsm4TrafficSignalUser
+WSM4_ROAD_MARKING_UNSPECIFIED: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_FORWARD: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_LEFT: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_RIGHT: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_LEFT_FORWARD: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_RIGHT_FORWARD: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_MERGE_LEFT: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_MERGE_RIGHT: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_STOP: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_KEEP_CLEAR: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_TEXT_PAINT: Wsm4RoadMarkingType
+WSM4_ROAD_MARKING_OTHER: Wsm4RoadMarkingType
+WSM4_BOUNDARY_UNSPECIFIED: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_BARRIER: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_FENCE: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_CURB: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_LOW_CURB: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_TALL_CURB: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_ROAD_BOUNDARY: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_OBSTACLE_BARS: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_WALL: Wsm4RoadBoundaryType
+WSM4_BOUNDARY_OTHER: Wsm4RoadBoundaryType
+CAMERA_ROLE_GROUND_TRUTH: CameraRole
+CAMERA_ROLE_CONDITIONING: CameraRole
+LINE_WIDTH_MODE_WORLD_METRES: LineWidthMode
+LINE_WIDTH_MODE_SCREEN_PIXELS: LineWidthMode
+LIDAR_COORDINATE_FRAME_SENSOR: LidarCoordinateFrame
+LIDAR_COORDINATE_FRAME_BODY: LidarCoordinateFrame
+LIDAR_COORDINATE_FRAME_WORLD: LidarCoordinateFrame
+LIDAR_SOURCE_GENERATED: LidarSource
+LIDAR_SOURCE_CONTROL: LidarSource
+LIDAR_PAYLOAD_POINT_CLOUD: LidarPayload
+LIDAR_PAYLOAD_RANGE_IMAGE: LidarPayload
+LIDAR_PAYLOAD_BOTH: LidarPayload
+
+class LinearCde(_message.Message):
+    __slots__ = ("linear_c", "linear_d", "linear_e")
+    LINEAR_C_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_D_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_E_FIELD_NUMBER: _ClassVar[int]
+    linear_c: float
+    linear_d: float
+    linear_e: float
+    def __init__(self, linear_c: _Optional[float] = ..., linear_d: _Optional[float] = ..., linear_e: _Optional[float] = ...) -> None: ...
+
+class FthetaCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "reference_poly", "pixeldist_to_angle_poly", "angle_to_pixeldist_poly", "max_angle", "linear_cde")
+    class PolynomialType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        UNKNOWN: _ClassVar[FthetaCameraParam.PolynomialType]
+        PIXELDIST_TO_ANGLE: _ClassVar[FthetaCameraParam.PolynomialType]
+        ANGLE_TO_PIXELDIST: _ClassVar[FthetaCameraParam.PolynomialType]
+    UNKNOWN: FthetaCameraParam.PolynomialType
+    PIXELDIST_TO_ANGLE: FthetaCameraParam.PolynomialType
+    ANGLE_TO_PIXELDIST: FthetaCameraParam.PolynomialType
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    REFERENCE_POLY_FIELD_NUMBER: _ClassVar[int]
+    PIXELDIST_TO_ANGLE_POLY_FIELD_NUMBER: _ClassVar[int]
+    ANGLE_TO_PIXELDIST_POLY_FIELD_NUMBER: _ClassVar[int]
+    MAX_ANGLE_FIELD_NUMBER: _ClassVar[int]
+    LINEAR_CDE_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    reference_poly: FthetaCameraParam.PolynomialType
+    pixeldist_to_angle_poly: _containers.RepeatedScalarFieldContainer[float]
+    angle_to_pixeldist_poly: _containers.RepeatedScalarFieldContainer[float]
+    max_angle: float
+    linear_cde: LinearCde
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., reference_poly: _Optional[_Union[FthetaCameraParam.PolynomialType, str]] = ..., pixeldist_to_angle_poly: _Optional[_Iterable[float]] = ..., angle_to_pixeldist_poly: _Optional[_Iterable[float]] = ..., max_angle: _Optional[float] = ..., linear_cde: _Optional[_Union[LinearCde, _Mapping]] = ...) -> None: ...
+
+class OpenCVPinholeCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "focal_length_x", "focal_length_y", "radial_coeffs", "tangential_coeffs", "thin_prism_coeffs")
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_X_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_Y_FIELD_NUMBER: _ClassVar[int]
+    RADIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    TANGENTIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    THIN_PRISM_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    focal_length_x: float
+    focal_length_y: float
+    radial_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    tangential_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    thin_prism_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., focal_length_x: _Optional[float] = ..., focal_length_y: _Optional[float] = ..., radial_coeffs: _Optional[_Iterable[float]] = ..., tangential_coeffs: _Optional[_Iterable[float]] = ..., thin_prism_coeffs: _Optional[_Iterable[float]] = ...) -> None: ...
+
+class OpenCVFisheyeCameraParam(_message.Message):
+    __slots__ = ("principal_point_x", "principal_point_y", "focal_length_x", "focal_length_y", "radial_coeffs", "max_angle")
+    PRINCIPAL_POINT_X_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_POINT_Y_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_X_FIELD_NUMBER: _ClassVar[int]
+    FOCAL_LENGTH_Y_FIELD_NUMBER: _ClassVar[int]
+    RADIAL_COEFFS_FIELD_NUMBER: _ClassVar[int]
+    MAX_ANGLE_FIELD_NUMBER: _ClassVar[int]
+    principal_point_x: float
+    principal_point_y: float
+    focal_length_x: float
+    focal_length_y: float
+    radial_coeffs: _containers.RepeatedScalarFieldContainer[float]
+    max_angle: float
+    def __init__(self, principal_point_x: _Optional[float] = ..., principal_point_y: _Optional[float] = ..., focal_length_x: _Optional[float] = ..., focal_length_y: _Optional[float] = ..., radial_coeffs: _Optional[_Iterable[float]] = ..., max_angle: _Optional[float] = ...) -> None: ...
+
+class BivariateWindshieldModelParameters(_message.Message):
+    __slots__ = ("reference_poly", "horizontal_poly", "vertical_poly", "horizontal_poly_inverse", "vertical_poly_inverse")
+    class ReferencePolynomial(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        FORWARD: _ClassVar[BivariateWindshieldModelParameters.ReferencePolynomial]
+        BACKWARD: _ClassVar[BivariateWindshieldModelParameters.ReferencePolynomial]
+    FORWARD: BivariateWindshieldModelParameters.ReferencePolynomial
+    BACKWARD: BivariateWindshieldModelParameters.ReferencePolynomial
+    REFERENCE_POLY_FIELD_NUMBER: _ClassVar[int]
+    HORIZONTAL_POLY_FIELD_NUMBER: _ClassVar[int]
+    VERTICAL_POLY_FIELD_NUMBER: _ClassVar[int]
+    HORIZONTAL_POLY_INVERSE_FIELD_NUMBER: _ClassVar[int]
+    VERTICAL_POLY_INVERSE_FIELD_NUMBER: _ClassVar[int]
+    reference_poly: BivariateWindshieldModelParameters.ReferencePolynomial
+    horizontal_poly: _containers.RepeatedScalarFieldContainer[float]
+    vertical_poly: _containers.RepeatedScalarFieldContainer[float]
+    horizontal_poly_inverse: _containers.RepeatedScalarFieldContainer[float]
+    vertical_poly_inverse: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, reference_poly: _Optional[_Union[BivariateWindshieldModelParameters.ReferencePolynomial, str]] = ..., horizontal_poly: _Optional[_Iterable[float]] = ..., vertical_poly: _Optional[_Iterable[float]] = ..., horizontal_poly_inverse: _Optional[_Iterable[float]] = ..., vertical_poly_inverse: _Optional[_Iterable[float]] = ...) -> None: ...
+
+class CameraSpec(_message.Message):
+    __slots__ = ("ftheta_param", "opencv_pinhole_param", "opencv_fisheye_param", "logical_id", "resolution_h", "resolution_w", "shutter_type", "bivariate_windshield_model_param")
+    FTHETA_PARAM_FIELD_NUMBER: _ClassVar[int]
+    OPENCV_PINHOLE_PARAM_FIELD_NUMBER: _ClassVar[int]
+    OPENCV_FISHEYE_PARAM_FIELD_NUMBER: _ClassVar[int]
+    LOGICAL_ID_FIELD_NUMBER: _ClassVar[int]
+    RESOLUTION_H_FIELD_NUMBER: _ClassVar[int]
+    RESOLUTION_W_FIELD_NUMBER: _ClassVar[int]
+    SHUTTER_TYPE_FIELD_NUMBER: _ClassVar[int]
+    BIVARIATE_WINDSHIELD_MODEL_PARAM_FIELD_NUMBER: _ClassVar[int]
+    ftheta_param: FthetaCameraParam
+    opencv_pinhole_param: OpenCVPinholeCameraParam
+    opencv_fisheye_param: OpenCVFisheyeCameraParam
+    logical_id: str
+    resolution_h: int
+    resolution_w: int
+    shutter_type: ShutterType
+    bivariate_windshield_model_param: BivariateWindshieldModelParameters
+    def __init__(self, ftheta_param: _Optional[_Union[FthetaCameraParam, _Mapping]] = ..., opencv_pinhole_param: _Optional[_Union[OpenCVPinholeCameraParam, _Mapping]] = ..., opencv_fisheye_param: _Optional[_Union[OpenCVFisheyeCameraParam, _Mapping]] = ..., logical_id: _Optional[str] = ..., resolution_h: _Optional[int] = ..., resolution_w: _Optional[int] = ..., shutter_type: _Optional[_Union[ShutterType, str]] = ..., bivariate_windshield_model_param: _Optional[_Union[BivariateWindshieldModelParameters, _Mapping]] = ...) -> None: ...
+
+class Image(_message.Message):
+    __slots__ = ("data", "format")
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    FORMAT_FIELD_NUMBER: _ClassVar[int]
+    data: bytes
+    format: ImageFormat
+    def __init__(self, data: _Optional[bytes] = ..., format: _Optional[_Union[ImageFormat, str]] = ...) -> None: ...
+
+class Vec3d(_message.Message):
+    __slots__ = ("x", "y", "z")
+    X_FIELD_NUMBER: _ClassVar[int]
+    Y_FIELD_NUMBER: _ClassVar[int]
+    Z_FIELD_NUMBER: _ClassVar[int]
+    x: float
+    y: float
+    z: float
+    def __init__(self, x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
+
+class Euler3d(_message.Message):
+    __slots__ = ("yaw_rad", "pitch_rad", "roll_rad")
+    YAW_RAD_FIELD_NUMBER: _ClassVar[int]
+    PITCH_RAD_FIELD_NUMBER: _ClassVar[int]
+    ROLL_RAD_FIELD_NUMBER: _ClassVar[int]
+    yaw_rad: float
+    pitch_rad: float
+    roll_rad: float
+    def __init__(self, yaw_rad: _Optional[float] = ..., pitch_rad: _Optional[float] = ..., roll_rad: _Optional[float] = ...) -> None: ...
+
+class Camera(_message.Message):
+    __slots__ = ("mount_id", "spec", "position_bs_m", "rotation_bs", "role", "line_width_mode", "near_m", "far_m", "rate_hz", "distortion", "calibration_source", "calibration_hash")
+    MOUNT_ID_FIELD_NUMBER: _ClassVar[int]
+    SPEC_FIELD_NUMBER: _ClassVar[int]
+    POSITION_BS_M_FIELD_NUMBER: _ClassVar[int]
+    ROTATION_BS_FIELD_NUMBER: _ClassVar[int]
+    ROLE_FIELD_NUMBER: _ClassVar[int]
+    LINE_WIDTH_MODE_FIELD_NUMBER: _ClassVar[int]
+    NEAR_M_FIELD_NUMBER: _ClassVar[int]
+    FAR_M_FIELD_NUMBER: _ClassVar[int]
+    RATE_HZ_FIELD_NUMBER: _ClassVar[int]
+    DISTORTION_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_HASH_FIELD_NUMBER: _ClassVar[int]
+    mount_id: str
+    spec: CameraSpec
+    position_bs_m: Vec3d
+    rotation_bs: Euler3d
+    role: CameraRole
+    line_width_mode: LineWidthMode
+    near_m: float
+    far_m: float
+    rate_hz: float
+    distortion: _containers.RepeatedScalarFieldContainer[float]
+    calibration_source: str
+    calibration_hash: int
+    def __init__(self, mount_id: _Optional[str] = ..., spec: _Optional[_Union[CameraSpec, _Mapping]] = ..., position_bs_m: _Optional[_Union[Vec3d, _Mapping]] = ..., rotation_bs: _Optional[_Union[Euler3d, _Mapping]] = ..., role: _Optional[_Union[CameraRole, str]] = ..., line_width_mode: _Optional[_Union[LineWidthMode, str]] = ..., near_m: _Optional[float] = ..., far_m: _Optional[float] = ..., rate_hz: _Optional[float] = ..., distortion: _Optional[_Iterable[float]] = ..., calibration_source: _Optional[str] = ..., calibration_hash: _Optional[int] = ...) -> None: ...
+
+class Strip(_message.Message):
+    __slots__ = ("centre_world_m", "width", "semantic", "colour", "pattern", "instance_id", "wsm4_boundary_type")
+    CENTRE_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_FIELD_NUMBER: _ClassVar[int]
+    SEMANTIC_FIELD_NUMBER: _ClassVar[int]
+    COLOUR_FIELD_NUMBER: _ClassVar[int]
+    PATTERN_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    WSM4_BOUNDARY_TYPE_FIELD_NUMBER: _ClassVar[int]
+    centre_world_m: _containers.RepeatedCompositeFieldContainer[Vec3d]
+    width: float
+    semantic: SemanticId
+    colour: MarkColorId
+    pattern: MarkTypeId
+    instance_id: int
+    wsm4_boundary_type: Wsm4RoadBoundaryType
+    def __init__(self, centre_world_m: _Optional[_Iterable[_Union[Vec3d, _Mapping]]] = ..., width: _Optional[float] = ..., semantic: _Optional[_Union[SemanticId, str]] = ..., colour: _Optional[_Union[MarkColorId, str]] = ..., pattern: _Optional[_Union[MarkTypeId, str]] = ..., instance_id: _Optional[int] = ..., wsm4_boundary_type: _Optional[_Union[Wsm4RoadBoundaryType, str]] = ...) -> None: ...
+
+class SurfaceBand(_message.Message):
+    __slots__ = ("left_world_m", "right_world_m", "semantic", "instance_id", "wsm4_marking_type")
+    LEFT_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    RIGHT_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    SEMANTIC_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    WSM4_MARKING_TYPE_FIELD_NUMBER: _ClassVar[int]
+    left_world_m: _containers.RepeatedCompositeFieldContainer[Vec3d]
+    right_world_m: _containers.RepeatedCompositeFieldContainer[Vec3d]
+    semantic: SemanticId
+    instance_id: int
+    wsm4_marking_type: Wsm4RoadMarkingType
+    def __init__(self, left_world_m: _Optional[_Iterable[_Union[Vec3d, _Mapping]]] = ..., right_world_m: _Optional[_Iterable[_Union[Vec3d, _Mapping]]] = ..., semantic: _Optional[_Union[SemanticId, str]] = ..., instance_id: _Optional[int] = ..., wsm4_marking_type: _Optional[_Union[Wsm4RoadMarkingType, str]] = ...) -> None: ...
+
+class Box(_message.Message):
+    __slots__ = ("centre_world_m", "rotation_world", "length_m", "width_m", "height_m", "semantic", "category", "instance_id", "gradient_along_local_x", "wireframe_overlay", "wsm4_sign_class", "wsm4_signal_state", "wsm4_signal_direction", "wsm4_signal_user")
+    CENTRE_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    ROTATION_WORLD_FIELD_NUMBER: _ClassVar[int]
+    LENGTH_M_FIELD_NUMBER: _ClassVar[int]
+    WIDTH_M_FIELD_NUMBER: _ClassVar[int]
+    HEIGHT_M_FIELD_NUMBER: _ClassVar[int]
+    SEMANTIC_FIELD_NUMBER: _ClassVar[int]
+    CATEGORY_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    GRADIENT_ALONG_LOCAL_X_FIELD_NUMBER: _ClassVar[int]
+    WIREFRAME_OVERLAY_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGN_CLASS_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_STATE_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_USER_FIELD_NUMBER: _ClassVar[int]
+    centre_world_m: Vec3d
+    rotation_world: Euler3d
+    length_m: float
+    width_m: float
+    height_m: float
+    semantic: SemanticId
+    category: ActorCategory
+    instance_id: int
+    gradient_along_local_x: bool
+    wireframe_overlay: bool
+    wsm4_sign_class: Wsm4SignClass
+    wsm4_signal_state: Wsm4TrafficSignalState
+    wsm4_signal_direction: Wsm4TrafficSignalDirection
+    wsm4_signal_user: Wsm4TrafficSignalUser
+    def __init__(self, centre_world_m: _Optional[_Union[Vec3d, _Mapping]] = ..., rotation_world: _Optional[_Union[Euler3d, _Mapping]] = ..., length_m: _Optional[float] = ..., width_m: _Optional[float] = ..., height_m: _Optional[float] = ..., semantic: _Optional[_Union[SemanticId, str]] = ..., category: _Optional[_Union[ActorCategory, str]] = ..., instance_id: _Optional[int] = ..., gradient_along_local_x: _Optional[bool] = ..., wireframe_overlay: _Optional[bool] = ..., wsm4_sign_class: _Optional[_Union[Wsm4SignClass, str]] = ..., wsm4_signal_state: _Optional[_Union[Wsm4TrafficSignalState, str]] = ..., wsm4_signal_direction: _Optional[_Union[Wsm4TrafficSignalDirection, str]] = ..., wsm4_signal_user: _Optional[_Union[Wsm4TrafficSignalUser, str]] = ...) -> None: ...
+
+class MeshInstance(_message.Message):
+    __slots__ = ("asset_path", "origin_world_m", "yaw_rad", "semantic", "instance_id", "wsm4_sign_class", "wsm4_signal_state", "wsm4_signal_direction", "wsm4_signal_user")
+    ASSET_PATH_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    YAW_RAD_FIELD_NUMBER: _ClassVar[int]
+    SEMANTIC_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGN_CLASS_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_STATE_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_DIRECTION_FIELD_NUMBER: _ClassVar[int]
+    WSM4_SIGNAL_USER_FIELD_NUMBER: _ClassVar[int]
+    asset_path: str
+    origin_world_m: Vec3d
+    yaw_rad: float
+    semantic: SemanticId
+    instance_id: int
+    wsm4_sign_class: Wsm4SignClass
+    wsm4_signal_state: Wsm4TrafficSignalState
+    wsm4_signal_direction: Wsm4TrafficSignalDirection
+    wsm4_signal_user: Wsm4TrafficSignalUser
+    def __init__(self, asset_path: _Optional[str] = ..., origin_world_m: _Optional[_Union[Vec3d, _Mapping]] = ..., yaw_rad: _Optional[float] = ..., semantic: _Optional[_Union[SemanticId, str]] = ..., instance_id: _Optional[int] = ..., wsm4_sign_class: _Optional[_Union[Wsm4SignClass, str]] = ..., wsm4_signal_state: _Optional[_Union[Wsm4TrafficSignalState, str]] = ..., wsm4_signal_direction: _Optional[_Union[Wsm4TrafficSignalDirection, str]] = ..., wsm4_signal_user: _Optional[_Union[Wsm4TrafficSignalUser, str]] = ...) -> None: ...
+
+class GenerationConfig(_message.Message):
+    __slots__ = ("prompt", "seed_image", "random_seed", "camera_seed_images", "enable_lidar", "lidar_output")
+    class CameraSeedImagesEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: Image
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
+    PROMPT_FIELD_NUMBER: _ClassVar[int]
+    SEED_IMAGE_FIELD_NUMBER: _ClassVar[int]
+    RANDOM_SEED_FIELD_NUMBER: _ClassVar[int]
+    CAMERA_SEED_IMAGES_FIELD_NUMBER: _ClassVar[int]
+    ENABLE_LIDAR_FIELD_NUMBER: _ClassVar[int]
+    LIDAR_OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    prompt: str
+    seed_image: Image
+    random_seed: int
+    camera_seed_images: _containers.MessageMap[str, Image]
+    enable_lidar: bool
+    lidar_output: LidarOutput
+    def __init__(self, prompt: _Optional[str] = ..., seed_image: _Optional[_Union[Image, _Mapping]] = ..., random_seed: _Optional[int] = ..., camera_seed_images: _Optional[_Mapping[str, Image]] = ..., enable_lidar: _Optional[bool] = ..., lidar_output: _Optional[_Union[LidarOutput, _Mapping]] = ...) -> None: ...
+
+class SceneDefinition(_message.Message):
+    __slots__ = ("run_id", "configuration_revision", "cameras", "camera_errors", "static_strips", "static_surface_bands", "origin_world_m", "generation_config", "lidars")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    CONFIGURATION_REVISION_FIELD_NUMBER: _ClassVar[int]
+    CAMERAS_FIELD_NUMBER: _ClassVar[int]
+    CAMERA_ERRORS_FIELD_NUMBER: _ClassVar[int]
+    STATIC_STRIPS_FIELD_NUMBER: _ClassVar[int]
+    STATIC_SURFACE_BANDS_FIELD_NUMBER: _ClassVar[int]
+    ORIGIN_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_CONFIG_FIELD_NUMBER: _ClassVar[int]
+    LIDARS_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    configuration_revision: int
+    cameras: _containers.RepeatedCompositeFieldContainer[Camera]
+    camera_errors: _containers.RepeatedScalarFieldContainer[str]
+    static_strips: _containers.RepeatedCompositeFieldContainer[Strip]
+    static_surface_bands: _containers.RepeatedCompositeFieldContainer[SurfaceBand]
+    origin_world_m: Vec3d
+    generation_config: GenerationConfig
+    lidars: _containers.RepeatedCompositeFieldContainer[Lidar]
+    def __init__(self, run_id: _Optional[str] = ..., configuration_revision: _Optional[int] = ..., cameras: _Optional[_Iterable[_Union[Camera, _Mapping]]] = ..., camera_errors: _Optional[_Iterable[str]] = ..., static_strips: _Optional[_Iterable[_Union[Strip, _Mapping]]] = ..., static_surface_bands: _Optional[_Iterable[_Union[SurfaceBand, _Mapping]]] = ..., origin_world_m: _Optional[_Union[Vec3d, _Mapping]] = ..., generation_config: _Optional[_Union[GenerationConfig, _Mapping]] = ..., lidars: _Optional[_Iterable[_Union[Lidar, _Mapping]]] = ...) -> None: ...
+
+class SceneFrame(_message.Message):
+    __slots__ = ("source_frame_id", "timestamp_us", "simulation_time_s", "stale", "ego_actor_id", "ego_position_world_m", "ego_rotation_world", "camera_mount_id", "surface_bands", "strips", "boxes", "meshes", "palette_hash", "palette_version")
+    SOURCE_FRAME_ID_FIELD_NUMBER: _ClassVar[int]
+    TIMESTAMP_US_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_TIME_S_FIELD_NUMBER: _ClassVar[int]
+    STALE_FIELD_NUMBER: _ClassVar[int]
+    EGO_ACTOR_ID_FIELD_NUMBER: _ClassVar[int]
+    EGO_POSITION_WORLD_M_FIELD_NUMBER: _ClassVar[int]
+    EGO_ROTATION_WORLD_FIELD_NUMBER: _ClassVar[int]
+    CAMERA_MOUNT_ID_FIELD_NUMBER: _ClassVar[int]
+    SURFACE_BANDS_FIELD_NUMBER: _ClassVar[int]
+    STRIPS_FIELD_NUMBER: _ClassVar[int]
+    BOXES_FIELD_NUMBER: _ClassVar[int]
+    MESHES_FIELD_NUMBER: _ClassVar[int]
+    PALETTE_HASH_FIELD_NUMBER: _ClassVar[int]
+    PALETTE_VERSION_FIELD_NUMBER: _ClassVar[int]
+    source_frame_id: int
+    timestamp_us: int
+    simulation_time_s: float
+    stale: bool
+    ego_actor_id: str
+    ego_position_world_m: Vec3d
+    ego_rotation_world: Euler3d
+    camera_mount_id: str
+    surface_bands: _containers.RepeatedCompositeFieldContainer[SurfaceBand]
+    strips: _containers.RepeatedCompositeFieldContainer[Strip]
+    boxes: _containers.RepeatedCompositeFieldContainer[Box]
+    meshes: _containers.RepeatedCompositeFieldContainer[MeshInstance]
+    palette_hash: int
+    palette_version: str
+    def __init__(self, source_frame_id: _Optional[int] = ..., timestamp_us: _Optional[int] = ..., simulation_time_s: _Optional[float] = ..., stale: _Optional[bool] = ..., ego_actor_id: _Optional[str] = ..., ego_position_world_m: _Optional[_Union[Vec3d, _Mapping]] = ..., ego_rotation_world: _Optional[_Union[Euler3d, _Mapping]] = ..., camera_mount_id: _Optional[str] = ..., surface_bands: _Optional[_Iterable[_Union[SurfaceBand, _Mapping]]] = ..., strips: _Optional[_Iterable[_Union[Strip, _Mapping]]] = ..., boxes: _Optional[_Iterable[_Union[Box, _Mapping]]] = ..., meshes: _Optional[_Iterable[_Union[MeshInstance, _Mapping]]] = ..., palette_hash: _Optional[int] = ..., palette_version: _Optional[str] = ...) -> None: ...
+
+class SceneBatch(_message.Message):
+    __slots__ = ("schema_version", "definition", "frames")
+    SCHEMA_VERSION_FIELD_NUMBER: _ClassVar[int]
+    DEFINITION_FIELD_NUMBER: _ClassVar[int]
+    FRAMES_FIELD_NUMBER: _ClassVar[int]
+    schema_version: int
+    definition: SceneDefinition
+    frames: _containers.RepeatedCompositeFieldContainer[SceneFrame]
+    def __init__(self, schema_version: _Optional[int] = ..., definition: _Optional[_Union[SceneDefinition, _Mapping]] = ..., frames: _Optional[_Iterable[_Union[SceneFrame, _Mapping]]] = ...) -> None: ...
+
+class SceneStreamRequest(_message.Message):
+    __slots__ = ("schema_version", "definition", "frame")
+    SCHEMA_VERSION_FIELD_NUMBER: _ClassVar[int]
+    DEFINITION_FIELD_NUMBER: _ClassVar[int]
+    FRAME_FIELD_NUMBER: _ClassVar[int]
+    schema_version: int
+    definition: SceneDefinition
+    frame: SceneFrame
+    def __init__(self, schema_version: _Optional[int] = ..., definition: _Optional[_Union[SceneDefinition, _Mapping]] = ..., frame: _Optional[_Union[SceneFrame, _Mapping]] = ...) -> None: ...
+
+class Pose3d(_message.Message):
+    __slots__ = ("position_m", "rotation")
+    POSITION_M_FIELD_NUMBER: _ClassVar[int]
+    ROTATION_FIELD_NUMBER: _ClassVar[int]
+    position_m: Vec3d
+    rotation: Euler3d
+    def __init__(self, position_m: _Optional[_Union[Vec3d, _Mapping]] = ..., rotation: _Optional[_Union[Euler3d, _Mapping]] = ...) -> None: ...
+
+class LidarOutput(_message.Message):
+    __slots__ = ("payload", "frame", "include_control", "include_invalid")
+    PAYLOAD_FIELD_NUMBER: _ClassVar[int]
+    FRAME_FIELD_NUMBER: _ClassVar[int]
+    INCLUDE_CONTROL_FIELD_NUMBER: _ClassVar[int]
+    INCLUDE_INVALID_FIELD_NUMBER: _ClassVar[int]
+    payload: LidarPayload
+    frame: LidarCoordinateFrame
+    include_control: bool
+    include_invalid: bool
+    def __init__(self, payload: _Optional[_Union[LidarPayload, str]] = ..., frame: _Optional[_Union[LidarCoordinateFrame, str]] = ..., include_control: _Optional[bool] = ..., include_invalid: _Optional[bool] = ...) -> None: ...
+
+class Lidar(_message.Message):
+    __slots__ = ("mount_id", "sensor_to_body", "rows", "columns", "rate_hz", "min_range_m", "max_range_m", "ray_directions", "calibration_source", "calibration_hash")
+    MOUNT_ID_FIELD_NUMBER: _ClassVar[int]
+    SENSOR_TO_BODY_FIELD_NUMBER: _ClassVar[int]
+    ROWS_FIELD_NUMBER: _ClassVar[int]
+    COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    RATE_HZ_FIELD_NUMBER: _ClassVar[int]
+    MIN_RANGE_M_FIELD_NUMBER: _ClassVar[int]
+    MAX_RANGE_M_FIELD_NUMBER: _ClassVar[int]
+    RAY_DIRECTIONS_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_HASH_FIELD_NUMBER: _ClassVar[int]
+    mount_id: str
+    sensor_to_body: Pose3d
+    rows: int
+    columns: int
+    rate_hz: float
+    min_range_m: float
+    max_range_m: float
+    ray_directions: bytes
+    calibration_source: str
+    calibration_hash: int
+    def __init__(self, mount_id: _Optional[str] = ..., sensor_to_body: _Optional[_Union[Pose3d, _Mapping]] = ..., rows: _Optional[int] = ..., columns: _Optional[int] = ..., rate_hz: _Optional[float] = ..., min_range_m: _Optional[float] = ..., max_range_m: _Optional[float] = ..., ray_directions: _Optional[bytes] = ..., calibration_source: _Optional[str] = ..., calibration_hash: _Optional[int] = ...) -> None: ...
+
+class LidarRangeImage(_message.Message):
+    __slots__ = ("rows", "columns", "range_m", "intensity", "valid")
+    ROWS_FIELD_NUMBER: _ClassVar[int]
+    COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    RANGE_M_FIELD_NUMBER: _ClassVar[int]
+    INTENSITY_FIELD_NUMBER: _ClassVar[int]
+    VALID_FIELD_NUMBER: _ClassVar[int]
+    rows: int
+    columns: int
+    range_m: bytes
+    intensity: bytes
+    valid: bytes
+    def __init__(self, rows: _Optional[int] = ..., columns: _Optional[int] = ..., range_m: _Optional[bytes] = ..., intensity: _Optional[bytes] = ..., valid: _Optional[bytes] = ...) -> None: ...
+
+class LidarPointCloud(_message.Message):
+    __slots__ = ("point_count", "frame", "positions_m", "intensity", "range_m", "ring", "column", "time_offset_us", "valid", "semantic", "instance_id")
+    POINT_COUNT_FIELD_NUMBER: _ClassVar[int]
+    FRAME_FIELD_NUMBER: _ClassVar[int]
+    POSITIONS_M_FIELD_NUMBER: _ClassVar[int]
+    INTENSITY_FIELD_NUMBER: _ClassVar[int]
+    RANGE_M_FIELD_NUMBER: _ClassVar[int]
+    RING_FIELD_NUMBER: _ClassVar[int]
+    COLUMN_FIELD_NUMBER: _ClassVar[int]
+    TIME_OFFSET_US_FIELD_NUMBER: _ClassVar[int]
+    VALID_FIELD_NUMBER: _ClassVar[int]
+    SEMANTIC_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
+    point_count: int
+    frame: LidarCoordinateFrame
+    positions_m: bytes
+    intensity: bytes
+    range_m: bytes
+    ring: bytes
+    column: bytes
+    time_offset_us: bytes
+    valid: bytes
+    semantic: bytes
+    instance_id: bytes
+    def __init__(self, point_count: _Optional[int] = ..., frame: _Optional[_Union[LidarCoordinateFrame, str]] = ..., positions_m: _Optional[bytes] = ..., intensity: _Optional[bytes] = ..., range_m: _Optional[bytes] = ..., ring: _Optional[bytes] = ..., column: _Optional[bytes] = ..., time_offset_us: _Optional[bytes] = ..., valid: _Optional[bytes] = ..., semantic: _Optional[bytes] = ..., instance_id: _Optional[bytes] = ...) -> None: ...
+
+class LidarFrame(_message.Message):
+    __slots__ = ("lidar_mount_id", "source", "sweep_index", "source_frame_id", "timestamp_us", "sweep_start_us", "sensor_to_world_start", "sensor_to_world_end", "range_image", "point_cloud", "calibration")
+    LIDAR_MOUNT_ID_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_INDEX_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FRAME_ID_FIELD_NUMBER: _ClassVar[int]
+    TIMESTAMP_US_FIELD_NUMBER: _ClassVar[int]
+    SWEEP_START_US_FIELD_NUMBER: _ClassVar[int]
+    SENSOR_TO_WORLD_START_FIELD_NUMBER: _ClassVar[int]
+    SENSOR_TO_WORLD_END_FIELD_NUMBER: _ClassVar[int]
+    RANGE_IMAGE_FIELD_NUMBER: _ClassVar[int]
+    POINT_CLOUD_FIELD_NUMBER: _ClassVar[int]
+    CALIBRATION_FIELD_NUMBER: _ClassVar[int]
+    lidar_mount_id: str
+    source: LidarSource
+    sweep_index: int
+    source_frame_id: int
+    timestamp_us: int
+    sweep_start_us: int
+    sensor_to_world_start: Pose3d
+    sensor_to_world_end: Pose3d
+    range_image: LidarRangeImage
+    point_cloud: LidarPointCloud
+    calibration: Lidar
+    def __init__(self, lidar_mount_id: _Optional[str] = ..., source: _Optional[_Union[LidarSource, str]] = ..., sweep_index: _Optional[int] = ..., source_frame_id: _Optional[int] = ..., timestamp_us: _Optional[int] = ..., sweep_start_us: _Optional[int] = ..., sensor_to_world_start: _Optional[_Union[Pose3d, _Mapping]] = ..., sensor_to_world_end: _Optional[_Union[Pose3d, _Mapping]] = ..., range_image: _Optional[_Union[LidarRangeImage, _Mapping]] = ..., point_cloud: _Optional[_Union[LidarPointCloud, _Mapping]] = ..., calibration: _Optional[_Union[Lidar, _Mapping]] = ...) -> None: ...
+
+class RenderedControlFrame(_message.Message):
+    __slots__ = ("camera_mount_id", "source_frame_id", "timestamp_us", "image", "ego_actor_id", "generated_image", "lidar")
+    CAMERA_MOUNT_ID_FIELD_NUMBER: _ClassVar[int]
+    SOURCE_FRAME_ID_FIELD_NUMBER: _ClassVar[int]
+    TIMESTAMP_US_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    EGO_ACTOR_ID_FIELD_NUMBER: _ClassVar[int]
+    GENERATED_IMAGE_FIELD_NUMBER: _ClassVar[int]
+    LIDAR_FIELD_NUMBER: _ClassVar[int]
+    camera_mount_id: str
+    source_frame_id: int
+    timestamp_us: int
+    image: Image
+    ego_actor_id: str
+    generated_image: Image
+    lidar: _containers.RepeatedCompositeFieldContainer[LidarFrame]
+    def __init__(self, camera_mount_id: _Optional[str] = ..., source_frame_id: _Optional[int] = ..., timestamp_us: _Optional[int] = ..., image: _Optional[_Union[Image, _Mapping]] = ..., ego_actor_id: _Optional[str] = ..., generated_image: _Optional[_Union[Image, _Mapping]] = ..., lidar: _Optional[_Iterable[_Union[LidarFrame, _Mapping]]] = ...) -> None: ...
+
+class RenderedControls(_message.Message):
+    __slots__ = ("frames",)
+    FRAMES_FIELD_NUMBER: _ClassVar[int]
+    frames: _containers.RepeatedCompositeFieldContainer[RenderedControlFrame]
+    def __init__(self, frames: _Optional[_Iterable[_Union[RenderedControlFrame, _Mapping]]] = ...) -> None: ...
