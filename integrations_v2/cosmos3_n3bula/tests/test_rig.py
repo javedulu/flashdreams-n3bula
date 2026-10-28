@@ -6,7 +6,7 @@ from math import pi
 import pytest
 
 from cosmos3_n3bula.proto import n3bula_pb2 as pb
-from cosmos3_n3bula.stream.rig import canonical_name, rig_cameras, seed_images
+from cosmos3_n3bula.stream.rig import canonical_name, rig_cameras
 
 pytestmark = pytest.mark.ci_cpu
 
@@ -113,28 +113,6 @@ def test_unknown_mount_ids_match_trained_seat_from_pose_and_fov(mount_id, yaw, e
     assert rig[0].message.mount_id == mount_id
 
 
-def test_seed_images_follow_rig_order():
-    rig = rig_cameras(
-        definition(camera("camera_front_tele_30fov"), camera("camera_front_wide_120fov"))
-    )
-    config = pb.GenerationConfig(
-        camera_seed_images={
-            "camera_front_tele_30fov": pb.Image(data=b"tele"),
-            "camera_front_wide_120fov": pb.Image(data=b"wide"),
-        }
-    )
-    assert [image.data for image in seed_images(config, rig)] == [b"wide", b"tele"]
-    assert seed_images(pb.GenerationConfig(), rig) is None
-
-
-def test_seed_images_refuse_partial_or_ambiguous():
-    rig = rig_cameras(
-        definition(camera("camera_front_tele_30fov"), camera("camera_front_wide_120fov"))
-    )
-    partial = pb.GenerationConfig(camera_seed_images={"camera_front_tele_30fov": pb.Image(data=b"x")})
-    with pytest.raises(ValueError, match="cover the rig exactly"):
-        seed_images(partial, rig)
-    with pytest.raises(ValueError, match="one-camera rig"):
-        seed_images(pb.GenerationConfig(seed_image=pb.Image(data=b"x")), rig)
-    single = rig_cameras(definition(camera("camera_front_wide_120fov")))
-    assert seed_images(pb.GenerationConfig(seed_image=pb.Image(data=b"x")), single)[0].data == b"x"
+def test_generation_config_has_no_image_conditioning_fields():
+    fields = pb.GenerationConfig.DESCRIPTOR.fields_by_name
+    assert set(fields) == {"prompt", "random_seed", "enable_lidar", "lidar_output"}

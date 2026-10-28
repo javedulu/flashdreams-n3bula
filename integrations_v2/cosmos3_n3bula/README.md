@@ -29,11 +29,9 @@ and `N3BULA_RETURN_CONTROL_IMAGES=1`; extra arguments go to the server.
   seats. Unknown IDs infer the nearest trained seat from body-frame yaw and F-theta
   `max_angle`; the external `mount_id` remains unchanged in responses. Arbitrary
   camera geometry is not supported. Responses are ordered frame-outer, rig-order inner.
-- The native model runs either unseeded `text2video` (`condition_frames=0`) or
-  seeded `image2video` (`condition_frames=1`). Use `camera_seed_images` for all
-  cameras or none; `seed_image` is accepted only for a one-camera rig. Seeds must
-  be real opening RGB frames from the same scene state. A Ludus control render is
-  not an RGB seed.
+- The native N3BULA integration always runs prompt-only `text2video`
+  (`condition_frames=0`). Its `GenerationConfig` carries no image-conditioning
+  fields; the proto reserves the removed field numbers and names.
 - The rollout draws a window of controls ahead of what it returns, so clients
   must stream frames ahead of the responses they wait for.
 - One stream at a time, one GPU, one process. `enable_lidar` returns `UNIMPLEMENTED`.
@@ -42,8 +40,8 @@ and `N3BULA_RETURN_CONTROL_IMAGES=1`; extra arguments go to the server.
 
 ## Performance defaults
 
-The server defaults to its fastest measured profile for both text2video and
-image2video: compiled denoising (`--compile-denoise default`), fused RMSNorm and
+The server defaults to its fastest measured profile for prompt-only text2video:
+compiled denoising (`--compile-denoise default`), fused RMSNorm and
 a compiled control encoder. Generated frames are JPEG-encoded on the GPU, Ludus
 uploads each rig camera once and updates actor cubes in place, and the VAE and
 TAEHV weights load once per process.
@@ -55,7 +53,7 @@ steps, 12 frames per chunk:
 |---|---:|---:|
 | eager (`--compile-denoise off --no-accelerated-rms-norm --no-compile-control-encode`) | 831 ms | 14.4 |
 | default (compiled) | 756 ms | 15.8 |
-| default, image2video | 784 ms | 15.2 |
+| historical image2video (removed) | 784 ms | 15.2 |
 
 These settings apply to single-camera sessions only. A multi-camera rig runs
 eager: compiled denoising collapsed a 6-camera rig after its first chunk, and a

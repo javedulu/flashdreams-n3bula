@@ -18,8 +18,6 @@ from cosmos3_n3bula.scene.pools import (
     surface_band_primitive,
     unsupported_surface_bands,
 )
-from cosmos3_n3bula.stream.mode import generation_mode
-
 pytestmark = pytest.mark.ci_cpu
 
 
@@ -131,11 +129,6 @@ def test_wsm4_rejects_nonconforming_actor_and_crosswalk_proxies():
         box_primitive(pb.Box(semantic=pb.SEMANTIC_ID_EGO))
     with pytest.raises(ValueError, match="polygon geometry"):
         box_primitive(pb.Box(semantic=pb.SEMANTIC_ID_CROSSWALK))
-
-
-def test_seed_and_unseeded_modes_are_native_model_modes():
-    assert generation_mode(False) == ("text2video", 0)
-    assert generation_mode(True) == ("image2video", 1)
 
 
 def test_wsm4_wire_additions_preserve_existing_fields():

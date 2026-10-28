@@ -90,25 +90,3 @@ def rig_cameras(definition) -> tuple[RigCamera, ...]:
         if not spec.resolution_w or not spec.resolution_h:
             raise ValueError(f"camera {one.message.mount_id} has no resolution")
     return tuple(cameras)
-
-
-def seed_images(config, cameras: Sequence[RigCamera]) -> list | None:
-    """Each camera's opening ``Image`` in rig order, or ``None`` for text-to-video.
-
-    ``camera_seed_images`` must cover every camera or none; the legacy single
-    ``seed_image`` is accepted only for a one-camera rig.
-    """
-    mounts = [one.message.mount_id for one in cameras]
-    if config.camera_seed_images:
-        missing = [mount for mount in mounts if mount not in config.camera_seed_images]
-        extra = sorted(set(config.camera_seed_images) - set(mounts))
-        if missing or extra:
-            raise ValueError(
-                f"camera_seed_images must cover the rig exactly: missing {missing}, unknown {extra}"
-            )
-        return [config.camera_seed_images[mount] for mount in mounts]
-    if config.HasField("seed_image") and config.seed_image.data:
-        if len(mounts) != 1:
-            raise ValueError("seed_image serves a one-camera rig; use camera_seed_images")
-        return [config.seed_image]
-    return None

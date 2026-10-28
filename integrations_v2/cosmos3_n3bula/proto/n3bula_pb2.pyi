@@ -535,27 +535,16 @@ class MeshInstance(_message.Message):
     def __init__(self, asset_path: _Optional[str] = ..., origin_world_m: _Optional[_Union[Vec3d, _Mapping]] = ..., yaw_rad: _Optional[float] = ..., semantic: _Optional[_Union[SemanticId, str]] = ..., instance_id: _Optional[int] = ..., wsm4_sign_class: _Optional[_Union[Wsm4SignClass, str]] = ..., wsm4_signal_state: _Optional[_Union[Wsm4TrafficSignalState, str]] = ..., wsm4_signal_direction: _Optional[_Union[Wsm4TrafficSignalDirection, str]] = ..., wsm4_signal_user: _Optional[_Union[Wsm4TrafficSignalUser, str]] = ...) -> None: ...
 
 class GenerationConfig(_message.Message):
-    __slots__ = ("prompt", "seed_image", "random_seed", "camera_seed_images", "enable_lidar", "lidar_output")
-    class CameraSeedImagesEntry(_message.Message):
-        __slots__ = ("key", "value")
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: Image
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
+    __slots__ = ("prompt", "random_seed", "enable_lidar", "lidar_output")
     PROMPT_FIELD_NUMBER: _ClassVar[int]
-    SEED_IMAGE_FIELD_NUMBER: _ClassVar[int]
     RANDOM_SEED_FIELD_NUMBER: _ClassVar[int]
-    CAMERA_SEED_IMAGES_FIELD_NUMBER: _ClassVar[int]
     ENABLE_LIDAR_FIELD_NUMBER: _ClassVar[int]
     LIDAR_OUTPUT_FIELD_NUMBER: _ClassVar[int]
     prompt: str
-    seed_image: Image
     random_seed: int
-    camera_seed_images: _containers.MessageMap[str, Image]
     enable_lidar: bool
     lidar_output: LidarOutput
-    def __init__(self, prompt: _Optional[str] = ..., seed_image: _Optional[_Union[Image, _Mapping]] = ..., random_seed: _Optional[int] = ..., camera_seed_images: _Optional[_Mapping[str, Image]] = ..., enable_lidar: _Optional[bool] = ..., lidar_output: _Optional[_Union[LidarOutput, _Mapping]] = ...) -> None: ...
+    def __init__(self, prompt: _Optional[str] = ..., random_seed: _Optional[int] = ..., enable_lidar: _Optional[bool] = ..., lidar_output: _Optional[_Union[LidarOutput, _Mapping]] = ...) -> None: ...
 
 class SceneDefinition(_message.Message):
     __slots__ = ("run_id", "configuration_revision", "cameras", "camera_errors", "static_strips", "static_surface_bands", "origin_world_m", "generation_config", "lidars")

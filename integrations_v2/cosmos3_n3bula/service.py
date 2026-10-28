@@ -9,6 +9,7 @@ import threading
 import time
 
 import grpc
+import torch
 from loguru import logger
 
 from cosmos3_n3bula.engine import Engine
@@ -40,18 +41,21 @@ class N3bulaCosmosService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
             while definition is not None:
                 feed = FrameFeed(requests)
                 started, session = time.perf_counter(), None
+                closed = False
+                next_definition = None
                 try:
                     session = CameraSession(self.engine, definition, feed)
                     logger.info(
-                        "N3BULA stream configured: run={} cameras={} seeded={}",
+                        "N3BULA stream configured: run={} cameras={} mode=text2video seeded=False",
                         definition.run_id,
                         session.mount_ids,
-                        bool(definition.generation_config.camera_seed_images)
-                        or definition.generation_config.HasField("seed_image"),
                     )
                     while True:
                         yield from session.step()
                 except StreamEnded as ended:
+                    ended_message = str(ended)
+                    # StreamEnded is normal flow control; its traceback keeps the closed session alive.
+                    ended.__traceback__ = None
                     emitted = 0 if session is None else session.emitted
                     elapsed = time.perf_counter() - started
                     rate = None if session is None else session.steady_fps()
@@ -59,19 +63,35 @@ class N3bulaCosmosService(n3bula_pb2_grpc.N3bulaLudusServiceServicer):
                     logger.info(
                         "N3BULA scene closed ({}): received={} generated={} in {:.1f}s "
                         "fps={:.2f} steady_fps={} (excluding the two warm-up steps)",
-                        ended,
+                        ended_message,
                         feed.received,
                         emitted,
                         elapsed,
                         emitted / elapsed if elapsed > 0 else 0.0,
                         steady,
                     )
+                    next_definition = feed.next_definition
+                    closed = True
                     if self.compile_cache is not None:
                         try:
                             self.compile_cache.save()
                         except Exception:  # noqa: BLE001 - caching must not fail a stream.
                             logger.exception("compile cache export failed")
-                definition = feed.next_definition
+                finally:
+                    session = None
+                    feed = None
+                    if closed and self.engine.device.type == "cuda":
+                        try:
+                            torch.cuda.synchronize(self.engine.device)
+                            logger.info(
+                                "N3BULA CUDA memory after scene close: "
+                                "allocated_mib={:.1f} reserved_mib={:.1f}",
+                                torch.cuda.memory_allocated(self.engine.device) / 2**20,
+                                torch.cuda.memory_reserved(self.engine.device) / 2**20,
+                            )
+                        except RuntimeError:
+                            logger.exception("N3BULA CUDA memory snapshot failed after scene close")
+                definition = next_definition
         except NotImplementedError as error:
             context.abort(grpc.StatusCode.UNIMPLEMENTED, str(error))
         except ValueError as error:

@@ -310,12 +310,10 @@ message MeshInstance {
 
 message GenerationConfig {
     string prompt = 1;
-    // Opening frame of a single-camera rig; multi-camera rigs use camera_seed_images.
-    Image seed_image = 2;
+    reserved 2, 4;
+    reserved "seed_image", "camera_seed_images";
     fixed64 random_seed = 3;
-    // Additive: opening frame per camera, keyed by Camera.mount_id. All or none.
-    map<string, Image> camera_seed_images = 4;
-    // Additive: also generate LiDAR sweeps (joint RGB+LiDAR checkpoint, needs seeds).
+    // Also generate LiDAR sweeps (joint RGB+LiDAR checkpoint; not served by this integration).
     bool enable_lidar = 5;
     // Additive: what each sweep carries; unset means LIDAR_PAYLOAD_POINT_CLOUD in the sensor frame.
     LidarOutput lidar_output = 6;

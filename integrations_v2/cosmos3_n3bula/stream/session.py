@@ -12,25 +12,20 @@ stream frames ahead of the responses it waits for.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
-from io import BytesIO
 
-import numpy as np
-import torch
 from loguru import logger
-from PIL import Image
 
 from cosmos3_n3bula.config import CHUNK_LATENT_FRAMES, DEFAULT_PROMPT
 from cosmos3_n3bula.engine import Engine
 from cosmos3_n3bula.scene.renderer import RigRenderer
 from cosmos3_n3bula.stream.feed import FrameFeed
-from cosmos3_n3bula.stream.mode import generation_mode
 from cosmos3_n3bula.stream.output import (
     chunk_responses,
     encode_controls,
     encode_generated,
 )
-from cosmos3_n3bula.stream.rig import rig_cameras, seed_images
+from cosmos3_n3bula.stream.rig import rig_cameras
+from cosmos3_n3bula.stream.stage_clock import _StageClock
 from cosmos3_nano_sim_auto.config import denoise_schedule
 from cosmos3_nano_sim_auto.impl.conditioning.control_provider import RenderedControls
 from cosmos3_nano_sim_auto.impl.conditioning.ludus_controls import FED
@@ -41,48 +36,9 @@ from cosmos3_nano_sim_auto.inputs import (
     WAN_TEMPORAL_COMPRESSION,
     MultiviewSample,
     camera_view_ids,
-    condition_latents,
-    condition_pixel_frames,
-    control_tokens,
     patch_grid,
     prompt_token_ids,
 )
-
-
-def _seed_clip(image, wanted: int, device) -> torch.Tensor:
-    """An encoded ``Image`` -> ``[wanted, 3, 480, 832]`` in ``[-1, 1]``."""
-    with Image.open(BytesIO(image.data)) as opened:
-        rgb = opened.convert("RGB").resize(FED, Image.Resampling.BILINEAR)
-    pixels = torch.from_numpy(np.asarray(rgb).copy()).to(device)
-    clip = pixels.permute(2, 0, 1).to(torch.float32).div(127.5).sub(1.0)
-    return clip.unsqueeze(0).repeat(wanted, 1, 1, 1).contiguous()
-
-
-class _StageClock:
-    """CUDA-synchronized wall time per named stage, summed over one chunk."""
-
-    def __init__(self, device, enabled: bool) -> None:
-        self._device = device
-        self.enabled = enabled
-        self.seconds: dict[str, float] = {}
-
-    def wrap(self, name: str, function: Callable) -> Callable:
-        if not self.enabled:
-            return function
-
-        def timed(*args, **kwargs):
-            torch.cuda.synchronize(self._device)
-            started = time.perf_counter()
-            result = function(*args, **kwargs)
-            torch.cuda.synchronize(self._device)
-            self.seconds[name] = self.seconds.get(name, 0.0) + time.perf_counter() - started
-            return result
-
-        return timed
-
-    def take(self) -> dict[str, float]:
-        seconds, self.seconds = self.seconds, {}
-        return seconds
 
 
 class CameraSession:
@@ -98,8 +54,6 @@ class CameraSession:
         self._clock = _StageClock(engine.device, settings.stage_timing)
         cameras = rig_cameras(definition)
         self.mount_ids = [one.message.mount_id for one in cameras]
-        seeds = seed_images(config, cameras)
-        model_mode, condition_frames = generation_mode(bool(seeds))
         names = [one.canonical for one in cameras]
         spec = engine.network.config.spec
         patch = spec.vfm.latent_patch_size
@@ -110,7 +64,7 @@ class CameraSession:
             patch_h=patch_h,
             patch_w=patch_w,
             frames_per_chunk=CHUNK_LATENT_FRAMES,
-            condition_frames=condition_frames,
+            condition_frames=0,
             seconds_per_frame=WAN_TEMPORAL_COMPRESSION / settings.fps,
             rig_view_ids=camera_view_ids(names),
         )
@@ -127,25 +81,14 @@ class CameraSession:
             geometry=geometry,
             latent_patch_size=patch,
         )
-        conditions = None
-        if seeds:
-            wanted = condition_pixel_frames(geometry)
-            conditions = control_tokens(
-                condition_latents(
-                    [_seed_clip(seed, wanted, engine.device) for seed in seeds],
-                    engine.encode,
-                    geometry=geometry,
-                ),
-                latent_patch_size=patch,
-            )
         sample = MultiviewSample(
             name=definition.run_id or "n3bula",
-            model_mode=model_mode,
+            model_mode="text2video",
             prompt=config.prompt or DEFAULT_PROMPT,
             resolution="480",
             cameras=tuple(names),
             control_paths=("",) * len(names),
-            image_paths=("",) * len(names) if seeds else (),
+            image_paths=(),
         )
         # Only per-camera captions read the duration; a single prompt ignores it.
         prompt = prompt_token_ids(sample, pixel_frames=1, fps=settings.fps)
@@ -153,7 +96,7 @@ class CameraSession:
             engine.network,
             geometry=geometry,
             control_tokens=controls,
-            condition_tokens=conditions,
+            condition_tokens=None,
             text_ids=prompt.text_ids,
             view_text_tokens=prompt.view_text_tokens,
             fps=settings.fps,
